@@ -26,7 +26,6 @@ mboot:
 	dd  end               ; End of kernel.
 	dd  start             ; Kernel entry point (initial EIP).
 
-        
 global start
 extern kmain
 
@@ -35,13 +34,7 @@ start:
     push esp					; push a pointer to kernel stack
     push ebx                  	; push a pointer to the multiboot info structure
     mov ebp, 0                  ; ebp=0 here we terminate stack traces
-
     call kmain
-    jmp hung
-
-hung:
-	hlt
-	jmp hung
 
 section .bss
     resb 32768

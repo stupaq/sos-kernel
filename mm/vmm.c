@@ -2,6 +2,7 @@
 #include <pmm.h>
 #include <idt.h>
 
+extern uint32_t pmm_location;
 extern uint8_t pmm_paging_active;
 
 page_directory_t* current_directory;
@@ -106,6 +107,4 @@ void page_fault(registers_t *regs) {
 	kprintf("Page fault at 0x%x, faulting address 0x%x\n", regs->eip, cr2);
 	kprintf("Error code: %x\n", regs->err_code);
 	panic("");
-	for (;;)
-		;
 }

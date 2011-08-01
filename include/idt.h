@@ -49,7 +49,7 @@ typedef struct {
 
 // An interrupt handler. It is a pointer to a function which takes a pointer 
 // to a structure containing register values.
-typedef void (*interrupt_handler_t)(registers_t *);
+typedef void (*interrupt_handler_t)(registers_t*);
 
 // Allows us to register an interrupt handler.
 void register_interrupt_handler(uint8_t n, interrupt_handler_t h);
@@ -87,6 +87,7 @@ extern void isr28();
 extern void isr29();
 extern void isr30();
 extern void isr31();
+extern void isr128();
 extern void isr255();
 extern void irq0();
 extern void irq1();

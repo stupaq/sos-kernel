@@ -5,7 +5,7 @@ uint8_t pmm_paging_active = 0;
 
 static uint32_t pmm_stack_loc = PMM_STACK_ADDR;
 static uint32_t pmm_stack_max = PMM_STACK_ADDR;
-static uint32_t pmm_location;
+uint32_t pmm_location;
 
 void init_pmm(uint32_t start) {
 	// Ensure the initial page allocation location is page-aligned.

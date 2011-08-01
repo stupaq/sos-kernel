@@ -10,10 +10,14 @@
 #include <thread.h>
 #include <lock.h>
 #include <keyboard.h>
+#include <initrd.h>
+
+extern void cpu_idle();
+
+void kinit();
 
 elf_t kernel_elf;
-
-spinlock_t kmain_lock = SPINLOCK_UNLOCKED;
+fs_node_t* kernel_initrd;
 
 int kmain(multiboot_info_t* mboot_ptr, uint32_t kstack_ptr) {
 	monitor_clear();
@@ -25,6 +29,7 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t kstack_ptr) {
 
 	init_pmm(mboot_ptr->mem_upper);
 	init_vmm();
+
 	init_heap();
 
 	// till now we cannot allocate any page from paging stack
@@ -38,10 +43,14 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t kstack_ptr) {
 
 	init_keyboard_driver();
 
-	monitor_clear("kernel mode completed.\n");
+	monitor_write("kernel mode completed.\n");
 
 	for (;;)
 		monitor_put(keyboard_getchar());
 
+	cpu_idle();
 	return 0;
+}
+
+void kinit() {
 }

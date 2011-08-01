@@ -1,3 +1,4 @@
+
 global gdt_flush:function gdt_flush.end-gdt_flush
 gdt_flush:
     mov eax, [esp+4]	; Get the pointer to the GDT, passed as a parameter.

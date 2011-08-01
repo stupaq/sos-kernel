@@ -1,3 +1,4 @@
+
 global idt_flush:function idt_flush.end-idt_flush
 idt_flush:
     mov eax, [esp+4]  ; Get the pointer to the IDT, passed as a parameter. 
@@ -58,6 +59,7 @@ ISR_NOERRCODE 28
 ISR_NOERRCODE 29
 ISR_NOERRCODE 30
 ISR_NOERRCODE 31
+ISR_NOERRCODE 128
 ISR_NOERRCODE 255
 
 
