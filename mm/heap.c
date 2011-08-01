@@ -3,9 +3,9 @@
 #include <vmm.h>
 
 static void alloc_chunk(uint32_t start, uint32_t len);
-static void free_chunk(header_t *chunk);
-static void split_chunk(header_t *chunk, uint32_t len);
-static void glue_chunk(header_t *chunk);
+static void free_chunk(header_t* chunk);
+static void split_chunk(header_t* chunk, uint32_t len);
+static void glue_chunk(header_t* chunk);
 
 uint32_t heap_max = HEAP_START;
 header_t *heap_first = 0;
@@ -13,13 +13,13 @@ header_t *heap_first = 0;
 void init_heap() {
 }
 
-void *kmalloc(uint32_t l) {
-	l += sizeof(header_t);
+void* kmalloc(uint32_t len) {
+	len += sizeof(header_t);
 
 	header_t *cur_header = heap_first, *prev_header = 0;
 	while (cur_header) {
-		if (cur_header->allocated == 0 && cur_header->length >= l) {
-			split_chunk(cur_header, l);
+		if (cur_header->allocated == 0 && cur_header->length >= len) {
+			split_chunk(cur_header, len);
 			cur_header->allocated = 1;
 			return (void*) ((uint32_t) cur_header + sizeof(header_t));
 		}
@@ -35,12 +35,12 @@ void *kmalloc(uint32_t l) {
 		heap_first = (header_t *) chunk_start;
 	}
 
-	alloc_chunk(chunk_start, l);
+	alloc_chunk(chunk_start, len);
 	cur_header = (header_t *) chunk_start;
 	cur_header->prev = prev_header;
 	cur_header->next = 0;
 	cur_header->allocated = 1;
-	cur_header->length = l;
+	cur_header->length = len;
 
 	prev_header->next = cur_header;
 
@@ -55,6 +55,9 @@ void kfree(void *p) {
 }
 
 void alloc_chunk(uint32_t start, uint32_t len) {
+	// sanity check
+	if (HEAP_END < start + len)
+		panic("Heap: out of memory.");
 	while (start + len > heap_max) {
 		uint32_t page = pmm_alloc_page();
 		map(heap_max, page, PAGE_PRESENT | PAGE_WRITE);
@@ -79,8 +82,6 @@ void free_chunk(header_t *chunk) {
 }
 
 void split_chunk(header_t *chunk, uint32_t len) {
-	// In order to split a chunk, once we split we need to know that there will be enough
-	// space in the new chunk to store the chunk header, otherwise it just isn't worthwhile.
 	if (chunk->length - len > sizeof(header_t)) {
 		header_t *newchunk = (header_t *) ((uint32_t) chunk + chunk->length);
 		newchunk->prev = chunk;

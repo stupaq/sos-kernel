@@ -2,12 +2,12 @@
 #include <pmm.h>
 #include <idt.h>
 
-uint32_t *page_directory = (uint32_t *) PAGE_DIR_VIRTUAL_ADDR;
-uint32_t *page_tables = (uint32_t *) PAGE_TABLE_VIRTUAL_ADDR;
+extern uint8_t pmm_paging_active;
 
-page_directory_t *current_directory;
+page_directory_t* current_directory;
 
-extern char pmm_paging_active;
+uint32_t* page_directory = (uint32_t *) PAGE_DIR_VIRTUAL_ADDR;
+uint32_t* page_tables = (uint32_t *) PAGE_TABLE_VIRTUAL_ADDR;
 
 void page_fault(registers_t *regs);
 
@@ -15,13 +15,9 @@ void init_vmm() {
 	int i;
 	uint32_t cr0;
 
-	// Register the page fault handler.
 	register_interrupt_handler(14, &page_fault);
 
-	// Create a page directory.
 	page_directory_t *pd = (page_directory_t*) pmm_alloc_page();
-
-	// Initialise it.
 	memset(pd, 0, 0x1000);
 
 	// Identity map the first 4 MB.
@@ -41,7 +37,7 @@ void init_vmm() {
 	// The last table loops back on the directory itself.
 	pd[1023] = (uint32_t) pd | PAGE_PRESENT | PAGE_WRITE;
 
-	// Set the current directory.
+	// set the current directory.
 	switch_page_directory(pd);
 
 	// Enable paging.
@@ -49,8 +45,7 @@ void init_vmm() {
 	cr0 |= 0x80000000;
 	asm volatile ("mov %0, %%cr0" : : "r" (cr0));
 
-	// We need to map the page table where the physical memory manager keeps its page stack
-	// else it will panic on the first "pmm_free_page".
+	// identity mapping pmm stack to avoid faults on page freeing
 	uint32_t pt_idx = PAGE_DIR_IDX((PMM_STACK_ADDR>>12));
 	page_directory[pt_idx] = pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE;
 	memset((void*) page_tables[pt_idx * 1024], 0, 0x1000);
@@ -84,7 +79,7 @@ void unmap(uint32_t va) {
 	uint32_t virtual_page = va / 0x1000;
 
 	page_tables[virtual_page] = 0;
-	// Inform the CPU that we have invalidated a page mapping.
+	// invalidate page mapping
 	asm volatile ("invlpg (%0)" : : "a" (va));
 }
 
@@ -101,6 +96,7 @@ char get_mapping(uint32_t va, uint32_t *pa) {
 			*pa = page_tables[virtual_page] & PAGE_MASK;
 		return 1;
 	}
+	return 0;
 }
 
 void page_fault(registers_t *regs) {

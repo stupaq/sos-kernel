@@ -63,9 +63,9 @@ void monitor_put(char c) {
 	// a backspace
 	if (c == 0x08 && xpos)
 		xpos--;
-	// tab (to point divided by 8)
+	// tab (to point divided by 4)
 	else if (c == 0x09)
-		xpos = (xpos + 8) & ~(8 - 1);
+		xpos = (xpos + 4) & ~(4 - 1);
 	// carriage return
 	else if (c == '\r')
 		xpos = 0;

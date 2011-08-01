@@ -1,8 +1,7 @@
-[global switch_thread]
-[global _create_thread]
-[extern current_thread]
-[extern thread_exit]
-        
+extern current_thread
+extern thread_exit
+
+global switch_thread:function switch_thread.end-switch_thread
 switch_thread:
         mov eax, [current_thread]
         mov eax, [eax]
@@ -33,3 +32,4 @@ switch_thread:
         popf
         
         ret
+.end:

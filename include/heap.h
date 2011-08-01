@@ -2,9 +2,12 @@
 #define HEAP_H
 
 #include <common.h>
+#include <pmm.h>
 
 #define HEAP_START 0xD0000000
-#define HEAP_END   0xFFBFF000
+#define HEAP_END PMM_STACK_ADDR
+// TODO: this was a mistake, because at 0xFF000000 is paging stack
+//#define HEAP_END   0xFFBFF000
 
 typedef struct header {
 	struct header *prev, *next;

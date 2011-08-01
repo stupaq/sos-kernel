@@ -1,4 +1,4 @@
-global idt_flush:function idt_flush.end-idt_flush ; Allows the C code to call idt_flush().
+global idt_flush:function idt_flush.end-idt_flush
 idt_flush:
     mov eax, [esp+4]  ; Get the pointer to the IDT, passed as a parameter. 
     lidt [eax]        ; Load the IDT pointer.
@@ -60,14 +60,10 @@ ISR_NOERRCODE 30
 ISR_NOERRCODE 31
 ISR_NOERRCODE 255
 
-; C function in idt.c
+
 extern idt_handler
 
 global isr_common_stub:function isr_common_stub.end-isr_common_stub
-
-; This is our common ISR stub. It saves the processor state, sets
-; up for kernel mode segments, calls the C-level fault handler,
-; and finally restores the stack frame.
 isr_common_stub:
     pusha                    ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
 
@@ -124,15 +120,11 @@ IRQ  12,    44
 IRQ  13,    45
 IRQ  14,    46
 IRQ  15,    47
-        
-; C function in idt.c
+
+
 extern irq_handler
 
 global irq_common_stub:function irq_common_stub.end-irq_common_stub
-
-; This is our common IRQ stub. It saves the processor state, sets
-; up for kernel mode segments, calls the C-level fault handler,
-; and finally restores the stack frame.
 irq_common_stub:
     pusha                    ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
 
@@ -161,4 +153,3 @@ irq_common_stub:
     add esp, 8               ; Cleans up the pushed error code and pushed ISR number
     iret                     ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
 .end:
-

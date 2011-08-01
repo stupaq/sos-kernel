@@ -34,11 +34,9 @@ static char * number(char * str, int num, int base, int size, int precision,
 	const char *digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	int i;
 
-	if (type & SMALL
-	)
+	if (SMALL & type)
 		digits = "0123456789abcdefghijklmnopqrstuvwxyz";
-	if (type & LEFT
-	)
+	if (LEFT & type)
 		type &= ~ZEROPAD;
 	if (base < 2 || base > 36)
 		return 0;
@@ -46,15 +44,15 @@ static char * number(char * str, int num, int base, int size, int precision,
 	if ((type & SIGN) && num < 0) {
 		sign = '-';
 		num = -num;
-	} else
-		sign = (type & PLUS) ? '+' : ((type & SPACE) ? ' ' : 0);if
-(	sign) size--;
-	if (type & SPECIAL
-	)
+	} else {
+		sign = (type & PLUS) ? '+' : ((SPACE & type) ? ' ' : 0);}
+if(	sign) size--;
+	if (SPECIAL & type) {
 		if (base == 16)
 			size -= 2;
 		else if (base == 8)
 			size--;
+	}
 	i = 0;
 	if (num == 0)
 		tmp[i++] = '0';
@@ -69,14 +67,14 @@ static char * number(char * str, int num, int base, int size, int precision,
 			*str++ = ' ';
 	if (sign)
 		*str++ = sign;
-	if (type & SPECIAL
-	)
+	if (SPECIAL & type) {
 		if (base == 8)
 			*str++ = '0';
 		else if (base == 16) {
 			*str++ = '0';
 			*str++ = digits[33];
 		}
+	}
 	if (!(type & LEFT))
 		while (size-- > 0)
 			*str++ = c;
