@@ -31,8 +31,9 @@ global start
 extern kmain
 
 start:
-    mov esp, stack              ; Set up stack (32kB)
-    push ebx                  	; Push a pointer to the multiboot info structure.
+    mov esp, stack              ; pet up stack (32kB)
+    push esp					; push a pointer to kernel stack
+    push ebx                  	; push a pointer to the multiboot info structure
     mov ebp, 0                  ; ebp=0 here we terminate stack traces
 
     call kmain

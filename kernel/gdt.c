@@ -11,10 +11,12 @@ gdt_entry_t gdt_entries[6];
 gdt_ptr_t gdt_ptr;
 tss_entry_t tss_entry;
 
-void init_gdt() {
-	// We have six entries in the GDT - two for kernel mode, two for user mode, the NULL descriptor,
+void init_gdt(uint32_t kstack_ptr) {
+	// We have six entries in the GDT - two for kernel mode,
+	// two for user mode, the NULL descriptor,
 	// and one for the TSS (task state segment)
-	// The limit is the last valid byte from the start of the GDT - i.e. the size of the GDT - 1.
+	// The limit is the last valid byte from the start of the GDT
+	// - i.e. the size of the GDT - 1.
 	gdt_ptr.limit = sizeof(gdt_entry_t) * 6 - 1;
 	gdt_ptr.base = (uint32_t) &gdt_entries;
 
@@ -23,7 +25,8 @@ void init_gdt() {
 	gdt_set_gate(2, 0, 0xFFFFF, 0x92, 0xCF); // kernel data
 	gdt_set_gate(3, 0, 0xFFFFF, 0xFA, 0xCF); // user code
 	gdt_set_gate(4, 0, 0xFFFFF, 0xF2, 0xCF); // user data
-	write_tss(5, 0x10, 0x0);
+	// we pass gdt_entry index, kernel stack data segment, kernel stack pointer
+	write_tss(5, 0x10, kstack_ptr);
 
 	gdt_flush((uint32_t) &gdt_ptr);
 	tss_flush();
@@ -53,16 +56,17 @@ static void write_tss(int32_t num, uint16_t ss0, uint32_t esp0) {
 	// Ensure the descriptor is initially zero.
 	memset(&tss_entry, 0, sizeof(tss_entry));
 
-	// TODO: verify these adresses
-	tss_entry.ss0 = ss0; // Set the kernel stack segment.
-	tss_entry.esp0 = esp0; // Set the kernel stack pointer.
+	tss_entry.ss0 = ss0; // set the kernel stack segment
+	tss_entry.esp0 = esp0; // set the kernel stack pointer
 
-	// Here we set the cs, ss, ds, es, fs and gs entries in the TSS. These specify what
-	// segments should be loaded when the processor switches to kernel mode. Therefore
-	// they are just our normal kernel code/data segments - 0x08 and 0x10 respectively,
-	// but with the last two bits set, making 0x0b and 0x13. The setting of these bits
-	// sets the RPL (requested privilege level) to 3, meaning that this TSS can be used
-	// to switch to kernel mode from ring 3.
+	// Here we set the cs, ss, ds, es, fs and gs entries in the TSS.
+	// These specify what segments should be loaded when the processor
+	// switches to kernel mode. Therefore they are just our normal
+	// kernel code/data segments - 0x08 and 0x10 respectively,
+	// but with the last two bits set, making 0x0b and 0x13.
+	// The setting of these bits sets the RPL (requested privilege level)
+	// to 3, meaning that this TSS can be used to switch to
+	// kernel mode from ring 3.
 	tss_entry.cs = 0x0b;
 	tss_entry.ss = tss_entry.ds = tss_entry.es = tss_entry.fs = tss_entry.gs =
 			0x13;

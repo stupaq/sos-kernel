@@ -15,10 +15,10 @@ elf_t kernel_elf;
 
 spinlock_t kmain_lock = SPINLOCK_UNLOCKED;
 
-int kmain(multiboot_info_t* mboot_ptr) {
+int kmain(multiboot_info_t* mboot_ptr, uint32_t kstack_ptr) {
 	monitor_clear();
 
-	init_gdt();
+	init_gdt(kstack_ptr);
 	init_idt();
 
 	init_timer(50);
@@ -37,6 +37,8 @@ int kmain(multiboot_info_t* mboot_ptr) {
 	init_scheduler(init_threading());
 
 	init_keyboard_driver();
+
+	monitor_clear("kernel mode completed.\n");
 
 	for (;;)
 		monitor_put(keyboard_getchar());
