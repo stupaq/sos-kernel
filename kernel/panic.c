@@ -4,7 +4,8 @@
 #include <kprintf.h>
 
 extern void system_hung();
-extern elf_t kernel_elf;
+
+elf_t kernel_elf;
 
 void print_stack_trace() {
 	uint32_t *ebp, *eip;

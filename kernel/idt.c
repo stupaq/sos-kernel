@@ -113,9 +113,9 @@ static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel,
 
 // This gets called from our ASM interrupt handler stub.
 void idt_handler(registers_t *regs) {
-	if (interrupt_handlers[regs->int_no])
+	if (interrupt_handlers[regs->int_no]) {
 		interrupt_handlers[regs->int_no](regs);
-	else {
+	} else {
 		kprintf("Unhandled interrupt: %d\n", regs->int_no);
 		panic("");
 	}
@@ -127,13 +127,12 @@ void register_interrupt_handler(uint8_t n, interrupt_handler_t h) {
 
 // This gets called from our ASM interrupt handler stub.
 void irq_handler(registers_t *regs) {
-	// Send an EOI (end of interrupt) signal to the PICs.
-	// If this interrupt involved the slave.
+	// if fired by slave
 	if (regs->int_no >= 40) {
-		// Send reset signal to slave.
+		// send reset signal to slave
 		outb(0xA0, 0x20);
 	}
-	// Send reset signal to master. (As well as slave, if necessary).
+	// send reset to master
 	outb(0x20, 0x20);
 
 	if (interrupt_handlers[regs->int_no] != 0)

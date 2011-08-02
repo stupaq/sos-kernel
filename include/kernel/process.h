@@ -7,10 +7,10 @@
 #include <mm/vmm.h>
 
 typedef struct process {
-	struct process* next;
 	uint32_t pid;
 	page_directory_t page_directory;
-	thread_list_t threads;
+	thread_t* threads;
+	struct process* next;
 } process_t;
 
 #endif // PROCESS_H

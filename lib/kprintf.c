@@ -5,7 +5,7 @@
 
 void kprintf(const char* fmt, ...)
 {
-	static char buf [1024];
+	static char buf[1024];
 
 	va_list args;
 	int i;

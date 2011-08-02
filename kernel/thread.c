@@ -15,7 +15,7 @@ thread_t* init_threading() {
 }
 
 thread_t* create_thread(int(*fn)(void*), void* arg, uint32_t* stack) {
-	thread_t *thread = kmalloc(sizeof(thread_t));
+	thread_t* thread = kmalloc(sizeof(thread_t));
 	memset(thread, 0, sizeof(thread_t));
 	thread->id = next_tid++;
 
@@ -33,9 +33,7 @@ thread_t* create_thread(int(*fn)(void*), void* arg, uint32_t* stack) {
 
 void thread_exit() {
 	register uint32_t val asm("eax");
-
 	kprintf("Thread exited with value %d\n", val);
-
 	for (;;)
 		;
 }
