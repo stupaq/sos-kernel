@@ -1,9 +1,9 @@
 #ifndef LOCK_H
 #define LOCK_H
 
+#include <kernel/thread.h>
+#include <kernel/scheduler.h>
 #include <common.h>
-#include <thread.h>
-#include <scheduler.h>
 
 #define SPINLOCK_LOCKED 0
 #define SPINLOCK_UNLOCKED 1

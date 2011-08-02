@@ -1,6 +1,6 @@
-#include <vmm.h>
-#include <pmm.h>
-#include <idt.h>
+#include <mm/vmm.h>
+#include <mm/pmm.h>
+#include <kernel/idt.h>
 
 extern uint8_t pmm_paging_active;
 

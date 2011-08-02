@@ -1,7 +1,7 @@
+#include <kernel/timer.h>
+#include <kernel/idt.h>
+#include <kernel/scheduler.h>
 #include <common.h>
-#include <timer.h>
-#include <idt.h>
-#include <scheduler.h>
 
 uint32_t tick = 0;
 

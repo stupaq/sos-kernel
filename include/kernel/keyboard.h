@@ -1,8 +1,8 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
+#include <kernel/idt.h>
 #include <common.h>
-#include <idt.h>
 
 #define CONTROL 0x1
 #define ALT 0x2

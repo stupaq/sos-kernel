@@ -1,5 +1,5 @@
-#include <pmm.h>
-#include <vmm.h>
+#include <mm/pmm.h>
+#include <mm/vmm.h>
 
 uint8_t pmm_paging_active = 0;
 

@@ -1,6 +1,6 @@
-#include <thread.h>
-#include <scheduler.h>
-#include <heap.h>
+#include <kernel/thread.h>
+#include <kernel/scheduler.h>
+#include <mm/heap.h>
 
 thread_t *current_thread;
 uint32_t next_tid = 0;

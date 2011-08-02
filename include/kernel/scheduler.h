@@ -1,8 +1,8 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
+#include <kernel/thread.h>
 #include <common.h>
-#include <thread.h>
 
 typedef struct thread_list {
 	thread_t *thread;

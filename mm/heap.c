@@ -1,6 +1,6 @@
-#include <heap.h>
-#include <pmm.h>
-#include <vmm.h>
+#include <mm/heap.h>
+#include <mm/pmm.h>
+#include <mm/vmm.h>
 
 static void alloc_chunk(uint32_t start, uint32_t len);
 static void free_chunk(header_t* chunk);

@@ -1,4 +1,4 @@
-#include <fs.h>
+#include <fs/fs.h>
 
 fs_node_t *fs_root = 0; // The root of the filesystem.
 

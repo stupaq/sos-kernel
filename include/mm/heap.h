@@ -1,8 +1,8 @@
 #ifndef HEAP_H
 #define HEAP_H
 
+#include <mm/pmm.h>
 #include <common.h>
-#include <pmm.h>
 
 #define HEAP_START 0xD0000000
 #define HEAP_END PMM_STACK_ADDR

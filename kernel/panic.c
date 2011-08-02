@@ -1,6 +1,6 @@
-#include <panic.h>
+#include <kernel/panic.h>
+#include <kernel/elf.h>
 #include <common.h>
-#include <elf.h>
 #include <kprintf.h>
 
 extern void system_hung();

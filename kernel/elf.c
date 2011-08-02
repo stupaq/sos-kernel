@@ -1,4 +1,4 @@
-#include <elf.h>
+#include <kernel/elf.h>
 
 elf_t elf_from_multiboot(multiboot_info_elf_t* mb) {
 	int i;

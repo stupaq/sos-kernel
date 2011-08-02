@@ -1,10 +1,7 @@
+#include <kernel/scheduler.h>
 #include <lock.h>
 #include <common.h>
-#include <thread.h>
 #include <monitor.h>
-#include <scheduler.h>
-
-extern thread_t *current_thread;
 
 static uint32_t atomic_test_and_set(volatile spinlock_t *lock) {
 	register spinlock_t value = SPINLOCK_UNLOCKED;

@@ -1,4 +1,4 @@
-#include <keyboard.h>
+#include <kernel/keyboard.h>
 
 //Define your keyboard layouts here:
 

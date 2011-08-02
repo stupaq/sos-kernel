@@ -1,19 +1,19 @@
 #include <multiboot.h>
 #include <common.h>
+#include <kernel/gdt.h>
+#include <kernel/idt.h>
+#include <kernel/timer.h>
+#include <kernel/elf.h>
+#include <kernel/keyboard.h>
+#include <kernel/scheduler.h>
+#include <kernel/thread.h>
+#include <mm/pmm.h>
+#include <mm/vmm.h>
+#include <mm/heap.h>
+#include <fs/initrd.h>
+#include <fs/fs.h>
 #include <monitor.h>
 #include <kprintf.h>
-#include <gdt.h>
-#include <idt.h>
-#include <timer.h>
-#include <elf.h>
-#include <pmm.h>
-#include <vmm.h>
-#include <heap.h>
-#include <initrd.h>
-#include <fs.h>
-#include <thread.h>
-#include <lock.h>
-#include <keyboard.h>
 
 // defined by linker
 extern uint32_t code, end;
@@ -62,8 +62,7 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_ptr) {
 
 	init_keyboard_driver();
 
-	kprintf("kernel mode completed.\n");
-
+	//panic("kernel mode completed");
 	cpu_idle();
 	return 0;
 }
