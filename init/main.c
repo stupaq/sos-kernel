@@ -18,14 +18,14 @@ extern uint32_t code, end;
 extern void cpu_idle();
 elf_t kernel_elf;
 
-int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_ptr) {
+int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 	init_monitor();
 	kprintf("kernel between 0x%.8x 0x%.8x\n", &code, &end);
 	uint32_t pmm_start = (uint32_t) &end;
 	if (mboot_ptr->mods_count)
 		pmm_start = *((uint32_t*) (mboot_ptr->mods_addr + 4));
 
-	init_gdt(kstack_ptr);
+	init_gdt(kstack_addr);
 	init_idt();
 
 	init_timer(50);
@@ -61,6 +61,10 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_ptr) {
 	init_keyboard_driver();
 
 	kprintf("kernel mode completed\n");
+	// TODO: before entering user mode: you've used kmalloc several times
+	// for scheduling data, that MUST be kernel-only, but currently kheap
+	// allocates data on pages with PAGE_USER bit set
+	// CONCLUSION: another stack
 
 	print_stack_trace();
 

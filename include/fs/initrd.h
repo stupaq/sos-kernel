@@ -16,8 +16,7 @@ typedef struct {
 	uint32_t length; // Length of the file.
 } initrd_file_header_t;
 
-// Initialises the initial ramdisk. It gets passed the address of the multiboot module,
-// and returns a completed filesystem node.
+// location is an address to multiboot module
 fs_node_t* init_initrd(uint32_t location);
 
-#endif
+#endif // INITRD_H
