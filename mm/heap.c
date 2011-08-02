@@ -8,7 +8,7 @@ static void split_chunk(header_t* chunk, uint32_t len);
 static void glue_chunk(header_t* chunk);
 
 uint32_t heap_max = HEAP_START;
-header_t *heap_first = 0;
+header_t* heap_first = 0;
 
 void init_heap() {
 }
@@ -50,27 +50,24 @@ void* kmalloc(uint32_t len) {
 void kfree(void *p) {
 	header_t *header = (header_t*) ((uint32_t) p - sizeof(header_t));
 	header->allocated = 0;
-
 	glue_chunk(header);
 }
 
 void alloc_chunk(uint32_t start, uint32_t len) {
-	// sanity check
-	if (HEAP_END < start + len)
+	// sanity check (watch out for overflow)
+	if (HEAP_END - start < len)
 		panic("Heap: out of memory.");
 	while (start + len > heap_max) {
 		uint32_t page = pmm_alloc_page();
-		map(heap_max, page, PAGE_PRESENT | PAGE_WRITE);
+		map(heap_max, page, PAGE_PRESENT | PAGE_WRITE | PAGE_USER);
 		heap_max += 0x1000;
 	}
 }
 
 void free_chunk(header_t *chunk) {
 	chunk->prev->next = 0;
-
 	if (chunk->prev == 0)
 		heap_first = 0;
-
 	// While the heap max can contract by a page and still be greater than the chunk address...
 	while ((heap_max - 0x1000) >= (uint32_t) chunk) {
 		heap_max -= 0x1000;

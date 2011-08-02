@@ -1,6 +1,7 @@
 #include <panic.h>
 #include <common.h>
 #include <elf.h>
+#include <kprintf.h>
 
 extern void system_hung();
 extern elf_t kernel_elf;

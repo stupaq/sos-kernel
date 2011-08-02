@@ -53,7 +53,7 @@ fs_node_t* init_initrd(uint32_t location) {
 	// Initialise the main and file header pointers and populate the root directory.
 	initrd_header = (initrd_header_t*) location;
 	file_headers = (initrd_file_header_t*) (location
-			+ sizeof(initrd_file_header_t));
+			+ sizeof(initrd_header_t));
 
 	// Initialise the root directory.
 	initrd_root = (fs_node_t*) kmalloc(sizeof(fs_node_t));
@@ -89,9 +89,7 @@ fs_node_t* init_initrd(uint32_t location) {
 			sizeof(fs_node_t) * initrd_header->nfiles);
 	nroot_nodes = initrd_header->nfiles;
 
-	// For every file...
-	int i;
-	for (i = 0; i < initrd_header->nfiles; i++) {
+	for (int i = 0; i < initrd_header->nfiles; i++) {
 		// Edit the file's header - currently it holds the file offset
 		// relative to the start of the ramdisk. We want it relative to the start
 		// of memory.

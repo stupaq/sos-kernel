@@ -117,7 +117,7 @@ void idt_handler(registers_t *regs) {
 		interrupt_handlers[regs->int_no](regs);
 	else {
 		kprintf("Unhandled interrupt: %d\n", regs->int_no);
-		panic("Unhandled interrupt");
+		panic("");
 	}
 }
 

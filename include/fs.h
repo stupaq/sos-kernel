@@ -10,6 +10,7 @@
 #define FS_PIPE        0x05
 #define FS_SYMLINK     0x06
 #define FS_MOUNTPOINT  0x08 // Is the file an active mountpoint?
+
 struct fs_node;
 
 // These typedefs define the type of callbacks - called when read/write/open/close
@@ -18,8 +19,8 @@ typedef uint32_t (*read_type_t)(struct fs_node*, uint32_t, uint32_t, uint8_t*);
 typedef uint32_t (*write_type_t)(struct fs_node*, uint32_t, uint32_t, uint8_t*);
 typedef void (*open_type_t)(struct fs_node*);
 typedef void (*close_type_t)(struct fs_node*);
-typedef struct dirent * (*readdir_type_t)(struct fs_node*, uint32_t);
-typedef struct fs_node * (*finddir_type_t)(struct fs_node*, char *name);
+typedef struct dirent*  (*readdir_type_t)(struct fs_node*, uint32_t);
+typedef struct fs_node*  (*finddir_type_t)(struct fs_node*, char* name);
 
 typedef struct fs_node {
 	char name[128]; // The filename.
@@ -36,7 +37,7 @@ typedef struct fs_node {
 	close_type_t close;
 	readdir_type_t readdir;
 	finddir_type_t finddir;
-	struct fs_node *ptr; // Used by mountpoints and symlinks.
+	struct fs_node* ptr; // Used by mountpoints and symlinks.
 } fs_node_t;
 
 struct dirent {
@@ -44,18 +45,16 @@ struct dirent {
 	uint32_t ino; // Inode number. Required by POSIX.
 };
 
-extern fs_node_t *fs_root; // The root of the filesystem.
+extern fs_node_t* fs_root; // The root of the filesystem.
 
-// Standard read/write/open/close functions. Note that these are all suffixed with
-// _fs to distinguish them from the read/write/open/close which deal with file descriptors
-// , not file nodes.
-uint32_t fs_read(fs_node_t *node, uint32_t offset, uint32_t size,
-		uint8_t *buffer);
-uint32_t fs_write(fs_node_t *node, uint32_t offset, uint32_t size,
-		uint8_t *buffer);
-void fs_open(fs_node_t *node, uint8_t read, uint8_t write);
-void fs_close(fs_node_t *node);
-struct dirent *fs_readdir(fs_node_t *node, uint32_t index);
-fs_node_t *finddir_fs(fs_node_t *node, char *name);
+// no read/write/open/close because they deal with file decriptors, not fs nodes
+uint32_t fs_node_read(fs_node_t* node, uint32_t offset, uint32_t size,
+		uint8_t* buffer);
+uint32_t fs_node_write(fs_node_t* node, uint32_t offset, uint32_t size,
+		uint8_t* buffer);
+void fs_node_open(fs_node_t* node, uint8_t read, uint8_t write);
+void fs_node_close(fs_node_t* node);
+struct dirent* fs_node_readdir(fs_node_t* node, uint32_t index);
+fs_node_t* fs_node_finddir(fs_node_t* node, char* name);
 
 #endif

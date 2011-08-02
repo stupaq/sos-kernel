@@ -17,7 +17,7 @@ void init_pmm(uint32_t start) {
 uint32_t pmm_alloc_page() {
 	if (pmm_paging_active) {
 		// sanity check
-		if (PMM_STACK_ADDR == pmm_stack_loc)
+		if (PMM_STACK_ADDR >= pmm_stack_loc)
 			panic("PMM Stack: out of memory.");
 		// pop
 		pmm_stack_loc -= sizeof(uint32_t);
@@ -54,7 +54,7 @@ void pmm_free_page(uint32_t p) {
 	}
 }
 
-void pmm_collect_pages(multiboot_info_t* mboot_ptr) {
+void pmm_collect_pages(multiboot_info_elf_t* mboot_ptr) {
 	uint32_t i = mboot_ptr->mmap_addr;
 	kprintf("kernel paging data end: 0x%.8x\nusable ram:\n", pmm_location);
 	while (i < mboot_ptr->mmap_addr + mboot_ptr->mmap_length) {

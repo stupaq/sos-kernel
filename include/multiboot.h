@@ -1,25 +1,14 @@
 #include <common.h>
 
-// TODO purge below
-/*
-#define MULTIBOOT_FLAG_MEM     0x001
-#define MULTIBOOT_FLAG_DEVICE  0x002
-#define MULTIBOOT_FLAG_CMDLINE 0x004
-#define MULTIBOOT_FLAG_MODS    0x008
-#define MULTIBOOT_FLAG_AOUT    0x010
-#define MULTIBOOT_FLAG_ELF     0x020
-#define MULTIBOOT_FLAG_MMAP    0x040
-#define MULTIBOOT_FLAG_CONFIG  0x080
-#define MULTIBOOT_FLAG_LOADER  0x100
-#define MULTIBOOT_FLAG_APM     0x200
-#define MULTIBOOT_FLAG_VBE     0x400
-*/
-
 /**
  * If defined splits adresses and lengths encoded as uint64_t into two values
  * of type uint32_t (little-endian style)
  */
 #define MULTIBOOT_SPLIT_UINT64 1
+/**
+ * If defined allows only use of multiboot_info with elf kernel
+ */
+#define MULTIBOOT_INFO_ELF_ONLY 1
 
 /* multiboot.h - Multiboot header file. */
 /* Copyright (C) 1999,2003,2007,2008,2009  Free Software Foundation, Inc.
@@ -163,6 +152,7 @@ struct multiboot_elf_section_header_table {
 };
 typedef struct multiboot_elf_section_header_table multiboot_elf_section_header_table_t;
 
+#ifndef MULTIBOOT_INFO_ELF_ONLY
 struct multiboot_info {
 	/* Multiboot info version number */
 	uint32_t flags;
@@ -212,6 +202,35 @@ struct multiboot_info {
 	uint16_t vbe_interface_len;
 };
 typedef struct multiboot_info multiboot_info_t;
+#endif
+
+struct multiboot_info_elf {
+	uint32_t flags;
+	uint32_t mem_lower;
+	uint32_t mem_upper;
+	uint32_t boot_device;
+	uint32_t cmdline;
+	uint32_t mods_count;
+	uint32_t mods_addr;
+	uint32_t num;
+	uint32_t size;
+	uint32_t addr;
+	uint32_t shndx;
+	uint32_t mmap_length;
+	uint32_t mmap_addr;
+	uint32_t drives_length;
+	uint32_t drives_addr;
+	uint32_t config_table;
+	uint32_t boot_loader_name;
+	uint32_t apm_table;
+	uint32_t vbe_control_info;
+	uint32_t vbe_mode_info;
+	uint32_t vbe_mode;
+	uint32_t vbe_interface_seg;
+	uint32_t vbe_interface_off;
+	uint32_t vbe_interface_len;
+}__attribute__((packed));
+typedef struct multiboot_info_elf multiboot_info_elf_t;
 
 struct multiboot_mmap_entry {
 	uint32_t size;

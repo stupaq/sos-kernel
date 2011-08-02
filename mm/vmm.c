@@ -6,8 +6,8 @@ extern uint8_t pmm_paging_active;
 
 page_directory_t* current_directory;
 
-uint32_t* kpage_directory = (uint32_t *) PAGE_DIR_VIRTUAL_ADDR;
-uint32_t* kpage_tables = (uint32_t *) PAGE_TABLE_VIRTUAL_ADDR;
+uint32_t* kpage_directory = (uint32_t*) PAGE_DIR_VIRTUAL_ADDR;
+uint32_t* kpage_tables = (uint32_t*) PAGE_TABLE_VIRTUAL_ADDR;
 
 void page_fault(registers_t *regs);
 
@@ -69,6 +69,7 @@ void map(uint32_t va, uint32_t pa, uint32_t flags) {
 
 	// Find the appropriate page table for 'va'.
 	if (kpage_directory[pt_idx] == 0) {
+		if (va == 0xff7ffffc) panic("break");
 		// The page table holding this page has not been created yet.
 		kpage_directory[pt_idx] = pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE;
 		memset((void*) kpage_tables[pt_idx * 1024], 0, 0x1000);
@@ -80,7 +81,6 @@ void map(uint32_t va, uint32_t pa, uint32_t flags) {
 
 void unmap(uint32_t va) {
 	uint32_t virtual_page = va / 0x1000;
-
 	kpage_tables[virtual_page] = 0;
 	// invalidate page mapping
 	asm volatile ("invlpg (%0)" : : "a" (va));
@@ -89,7 +89,6 @@ void unmap(uint32_t va) {
 char get_mapping(uint32_t va, uint32_t *pa) {
 	uint32_t virtual_page = va / 0x1000;
 	uint32_t pt_idx = PAGE_DIR_IDX(virtual_page);
-
 	// Find the appropriate page table for 'va'.
 	if (kpage_directory[pt_idx] == 0)
 		return 0;
@@ -105,7 +104,6 @@ char get_mapping(uint32_t va, uint32_t *pa) {
 void page_fault(registers_t *regs) {
 	uint32_t cr2;
 	asm volatile ("mov %%cr2, %0" : "=r" (cr2));
-
 	kprintf("Page fault at 0x%x, faulting address 0x%x\n", regs->eip, cr2);
 	kprintf("Error code: %x\n", regs->err_code);
 	panic("");

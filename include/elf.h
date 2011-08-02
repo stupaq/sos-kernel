@@ -36,7 +36,7 @@ typedef struct {
 } elf_t;
 
 // Takes a multiboot structure and returns an elf structure containing the symbol information.
-elf_t elf_from_multiboot(multiboot_info_t *mb);
+elf_t elf_from_multiboot(multiboot_info_elf_t *mb);
 
 // Looks up a symbol by address.
 const char *elf_lookup_symbol(uint32_t addr, elf_t *elf);

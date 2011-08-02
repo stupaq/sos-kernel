@@ -1,4 +1,5 @@
 #include <scheduler.h>
+#include <heap.h>
 
 thread_list_t *ready_queue = 0;
 thread_list_t *current_thread = 0;
