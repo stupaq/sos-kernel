@@ -75,6 +75,6 @@ void pmm_collect_pages(multiboot_info_elf_t* mboot_ptr) {
 		// so we must add sizeof (uint32_t).
 		i += me->size + sizeof(uint32_t);
 	}
-	// TODO: print rest of memory mapping
+	// TODO: print rest of memory mapping or remove all those kprintf's
 }
 

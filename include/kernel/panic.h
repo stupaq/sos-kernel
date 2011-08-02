@@ -3,4 +3,6 @@
 
 void panic(const char *msg);
 
+void print_stack_trace();
+
 #endif

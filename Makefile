@@ -11,7 +11,7 @@ CFLAGS=-nostdlib -fno-builtin -m32 -Wall -Wextra -std=gnu99 -pedantic
 LDFLAGS=-melf_i386 -Tlink.ld
 ASFLAGS=-felf
 
-all: $(COBJECTS) $(SOBJECTS) link
+all: $(COBJECTS) $(SOBJECTS) link utils
 
 clean:
 	@echo Removing object files

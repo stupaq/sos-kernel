@@ -2,7 +2,6 @@
 #define INITRD_H
 
 #include <fs/fs.h>
-#include <common.h>
 
 #define HEADER_MAGIC 0xBF
 

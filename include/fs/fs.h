@@ -9,27 +9,26 @@
 #define FS_BLOCKDEVICE 0x04
 #define FS_PIPE        0x05
 #define FS_SYMLINK     0x06
-#define FS_MOUNTPOINT  0x08 // Is the file an active mountpoint?
+#define FS_MOUNTPOINT  0x08 // is the file a mountpoint?
 
 struct fs_node;
 
-// These typedefs define the type of callbacks - called when read/write/open/close
-// are called.
+// each node have these callbacks (TODO: change to driver pointer interface)
 typedef uint32_t (*read_type_t)(struct fs_node*, uint32_t, uint32_t, uint8_t*);
 typedef uint32_t (*write_type_t)(struct fs_node*, uint32_t, uint32_t, uint8_t*);
 typedef void (*open_type_t)(struct fs_node*);
 typedef void (*close_type_t)(struct fs_node*);
-typedef struct dirent*  (*readdir_type_t)(struct fs_node*, uint32_t);
-typedef struct fs_node*  (*finddir_type_t)(struct fs_node*, char* name);
+typedef struct dirent* (*readdir_type_t)(struct fs_node*, uint32_t);
+typedef struct fs_node* (*finddir_type_t)(struct fs_node*, char* name);
 
 typedef struct fs_node {
-	char name[128]; // The filename.
-	uint32_t mask; // The permissions mask.
-	uint32_t uid; // The owning user.
-	uint32_t gid; // The owning group.
-	uint32_t flags; // Includes the node type. See #defines above.
-	uint32_t inode; // This is device-specific - provides a way for a filesystem to identify files.
-	uint32_t length; // Size of the file, in bytes.
+	char name[128];
+	uint32_t mask; // permissions
+	uint32_t uid;
+	uint32_t gid;
+	uint32_t flags;
+	uint32_t inode;
+	uint32_t length; // size in bytes
 	uint32_t impl; // An implementation-defined number.
 	read_type_t read;
 	write_type_t write;
@@ -37,24 +36,22 @@ typedef struct fs_node {
 	close_type_t close;
 	readdir_type_t readdir;
 	finddir_type_t finddir;
-	struct fs_node* ptr; // Used by mountpoints and symlinks.
+	struct fs_node* ptr; // used by mountpoints and symlinks
 } fs_node_t;
 
-struct dirent {
-	char name[128]; // Filename.
-	uint32_t ino; // Inode number. Required by POSIX.
-};
+typedef struct dirent {
+	char name[128];
+	uint32_t inode;
+} dirent_t;
 
 extern fs_node_t* fs_root; // The root of the filesystem.
 
-// no read/write/open/close because they deal with file decriptors, not fs nodes
-uint32_t fs_node_read(fs_node_t* node, uint32_t offset, uint32_t size,
-		uint8_t* buffer);
-uint32_t fs_node_write(fs_node_t* node, uint32_t offset, uint32_t size,
-		uint8_t* buffer);
-void fs_node_open(fs_node_t* node, uint8_t read, uint8_t write);
-void fs_node_close(fs_node_t* node);
-struct dirent* fs_node_readdir(fs_node_t* node, uint32_t index);
-fs_node_t* fs_node_finddir(fs_node_t* node, char* name);
+// TODO: fucked up when it comes to implement file descriptors
+uint32_t read(fs_node_t* node, uint32_t offset, uint32_t size, uint8_t* buffer);
+uint32_t write(fs_node_t* node, uint32_t offset, uint32_t size, uint8_t* buffer);
+void open(fs_node_t* node, uint8_t read, uint8_t write);
+void close(fs_node_t* node);
+struct dirent* readdir(fs_node_t* node, uint32_t index);
+fs_node_t* finddir(fs_node_t* node, char* name);
 
 #endif

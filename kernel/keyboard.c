@@ -1,4 +1,5 @@
 #include <kernel/keyboard.h>
+#include <kernel/idt.h>
 
 //Define your keyboard layouts here:
 
@@ -137,7 +138,7 @@ keymap_t gb = {
 		// caps
 		{
 		/* first row - indices 0 to 14 */
-		0, 27, '!', '@', '£', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b',
+		0, 27, '!', '@', '#' /*'£'*/, '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b',
 
 		/* second row - indices 15 to 28 */
 		'\t', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', // Enter key
@@ -194,6 +195,8 @@ keymap_t *current_layout;
 uint32_t keyboard_buffer_start, keyboard_buffer_end;
 // Circular buffer giving content captured from keyboard.
 char keyboard_buffer[256];
+
+void keyboard_handler(registers_t *regs);
 
 void init_keyboard_driver() {
 	register_interrupt_handler(IRQ1, &keyboard_handler);

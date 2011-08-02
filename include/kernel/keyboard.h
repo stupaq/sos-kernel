@@ -1,7 +1,6 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
-#include <kernel/idt.h>
 #include <common.h>
 
 #define CONTROL 0x1
@@ -33,17 +32,14 @@ typedef struct keymap {
 	// All the chars mapped to their respective scancodes
 	uint8_t scancodes[128];
 	uint8_t shift_scancodes[128];
-
 	// The function keys mapped to the bit position in the key status map.
 	uint8_t control_map[8];
-
 	// The statuses of the control keys, initialized to 0
 	key_status_t controls;
 } keymap_t;
 
 void init_keyboard_driver();
 void switch_layout(keymap_t *layout);
-void keyboard_handler(registers_t *regs);
 
 // Returns a character from the keyboard; does not block.
 // Returns '\0' if no character is available.

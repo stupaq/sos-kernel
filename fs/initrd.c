@@ -1,13 +1,11 @@
 #include <fs/initrd.h>
-#include <mm/heap.h>
-#include <string.h>
 
-initrd_header_t *initrd_header; // The header.
-initrd_file_header_t *file_headers; // The list of file headers.
-fs_node_t *initrd_root; // Our root directory node.
-fs_node_t *initrd_dev; // We also add a directory node for /dev, so we can mount devfs later on.
-fs_node_t *root_nodes; // List of file nodes.
-int nroot_nodes; // Number of file nodes.
+static initrd_header_t *initrd_header; // The header.
+static initrd_file_header_t *file_headers; // The list of file headers.
+static fs_node_t *initrd_root; // Our root directory node.
+static fs_node_t *initrd_dev; // We also add a directory node for /dev, so we can mount devfs later on.
+static fs_node_t *root_nodes; // List of file nodes.
+static int nroot_nodes; // Number of file nodes.
 
 struct dirent dirent;
 
@@ -26,7 +24,7 @@ static struct dirent *initrd_readdir(fs_node_t *node, uint32_t index) {
 	if (node == initrd_root && index == 0) {
 		strcpy(dirent.name, "dev");
 		dirent.name[3] = 0;
-		dirent.ino = 0;
+		dirent.inode = 0;
 		return &dirent;
 	}
 
@@ -34,7 +32,7 @@ static struct dirent *initrd_readdir(fs_node_t *node, uint32_t index) {
 		return 0;
 	strcpy(dirent.name, root_nodes[index - 1].name);
 	dirent.name[strlen(root_nodes[index - 1].name)] = 0;
-	dirent.ino = root_nodes[index - 1].inode;
+	dirent.inode = root_nodes[index - 1].inode;
 	return &dirent;
 }
 
