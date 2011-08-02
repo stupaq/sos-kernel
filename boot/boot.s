@@ -21,22 +21,22 @@ mboot:
 
 	dd mboot
 
-	dd  code              ; Start of kernel '.text' (code) section.
-	dd  bss               ; End of kernel '.data' section.
-	dd  end               ; End of kernel.
-	dd  start             ; Kernel entry point (initial EIP).
+	dd  code			; Start of kernel '.text' (code) section.
+	dd  bss				; End of kernel '.data' section.
+	dd  end				; End of kernel.
+	dd  start			; Kernel entry point (initial EIP).
 
 global start
 extern kmain
 
 start:
-    mov esp, stack              ; pet up stack (32kB)
-    push esp					; push a pointer to kernel stack
-    push ebx                  	; push a pointer to the multiboot info structure
-    mov ebp, 0                  ; ebp=0 here we terminate stack traces
+    mov esp, stack		; pet up stack (32kB)
+    push esp			; push a pointer to kernel stack
+    push ebx			; push a pointer to the multiboot info structure
+    mov ebp, 0			; ebp=0 here we terminate stack traces
     call kmain
 
 section .bss
-    resb 32768
+    resb 16384			; stack size (16kB)
 
 stack:

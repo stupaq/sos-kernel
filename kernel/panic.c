@@ -2,7 +2,7 @@
 #include <common.h>
 #include <elf.h>
 
-extern void cpu_idle();
+extern void system_hung();
 extern elf_t kernel_elf;
 
 static void print_stack_trace();
@@ -11,7 +11,7 @@ void panic(const char *msg) {
 	kprintf("*** System panic: %s\n", msg);
 	print_stack_trace();
 	kprintf("***\n");
-	cpu_idle();
+	system_hung();
 }
 
 void print_stack_trace() {

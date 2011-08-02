@@ -197,7 +197,7 @@ char keyboard_buffer[256];
 
 void init_keyboard_driver() {
 	register_interrupt_handler(IRQ1, &keyboard_handler);
-	switch_layout(&gb);
+	switch_layout(&us);
 
 	keyboard_buffer_start = 0;
 	keyboard_buffer_end = 0;

@@ -1,4 +1,5 @@
 #include <multiboot.h>
+#include <common.h>
 #include <monitor.h>
 #include <gdt.h>
 #include <idt.h>
@@ -6,28 +7,28 @@
 #include <elf.h>
 #include <pmm.h>
 #include <vmm.h>
-#include <heap.h>
 #include <thread.h>
 #include <lock.h>
 #include <keyboard.h>
 #include <initrd.h>
 
+// defined by linker
+extern uint32_t code, end;
 extern void cpu_idle();
-
-void kinit();
 
 elf_t kernel_elf;
 fs_node_t* kernel_initrd;
 
 int kmain(multiboot_info_t* mboot_ptr, uint32_t kstack_ptr) {
-	monitor_clear();
+	init_monitor();
+	kprintf("kernel between 0x%.8x 0x%.8x\n", &code, &end);
 
 	init_gdt(kstack_ptr);
 	init_idt();
 
 	init_timer(50);
 
-	init_pmm(mboot_ptr->mem_upper);
+	init_pmm((uint32_t) &end);
 	init_vmm();
 
 	init_heap();
@@ -43,14 +44,8 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t kstack_ptr) {
 
 	init_keyboard_driver();
 
-	monitor_write("kernel mode completed.\n");
-
-	for (;;)
-		monitor_put(keyboard_getchar());
+	kprintf("kernel mode completed.\n");
 
 	cpu_idle();
 	return 0;
-}
-
-void kinit() {
 }

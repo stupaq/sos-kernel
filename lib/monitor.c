@@ -93,7 +93,7 @@ void monitor_put(char c) {
 }
 
 // clears the screen (with spaces)
-void monitor_clear() {
+void init_monitor() {
 	uint16_t blank = vga_format_ascii(back_color, fore_color, 0x20);
 
 	int i;
