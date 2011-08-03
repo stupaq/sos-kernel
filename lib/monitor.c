@@ -7,11 +7,11 @@
 // we declared it as word, easy access to chars with formatting
 uint16_t* video_mem = (uint16_t*) VIDEO;
 // cursor position
-uint8_t xpos = 0;
-uint8_t ypos = 0;
+static uint8_t xpos = 0;
+static uint8_t ypos = 0;
 // background colour is black (0), foreground is white (15)
-uint8_t back_color = 0;
-uint8_t fore_color = 15;
+static uint8_t back_color = 0;
+static uint8_t fore_color = 15;
 
 // returns uint16_t with set vga attribute byte according to given values
 static uint16_t vga_set_attr(uint8_t back, uint8_t fore) {

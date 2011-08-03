@@ -13,8 +13,9 @@
 #include <monitor.h>
 
 extern uint32_t code, end; // defined by linker
+extern elf_t kernel_elf; // for print stack trace;
+
 extern void cpu_idle();
-extern elf_t kernel_elf;
 
 // threading testing shit
 #include <lock.h>
@@ -32,33 +33,39 @@ int fake_thread(void* arg) {
 }
 
 int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
+	// end of reserved memory (kernel, initrd)
+	uint32_t pmm_start =
+				(mboot_ptr->mods_count) ?
+						*((uint32_t*) (mboot_ptr->mods_addr + 4)) : (uint32_t) &end;
+
+	// TODO: remember to set proper video mem
 	init_monitor();
-	kprintf("kernel between 0x%.8x 0x%.8x\n", &code, &end);
-	uint32_t pmm_start = (uint32_t) &end;
-	if (mboot_ptr->mods_count)
-		pmm_start = *((uint32_t*) (mboot_ptr->mods_addr + 4));
 
-	init_gdt(kstack_addr);
-	init_idt();
-
-	init_timer(20);
-
+	// enable paging
 	init_pmm(pmm_start);
 	init_vmm();
 
-	init_heap();
+	// after enabling paging set proper gdt
+	init_gdt(kstack_addr);
+	init_idt();
+	init_timer(20);
 
+	kprintf("kernel between 0x%.8x 0x%.8x\n", &code, &end);
 	// till now we cannot allocate any page from paging stack
 	pmm_collect_pages(mboot_ptr);
 
+	init_heap();
+
+	// heap must be initialized before
 	kernel_elf = elf_from_multiboot(mboot_ptr);
 	print_stack_trace();
 
 	if (mboot_ptr->mods_count) {
-		kprintf("initrd loaded at 0x%.8x to 0x%.8x\n",
-				*((uint32_t*) mboot_ptr->mods_addr), pmm_start);
+		// set root filesystem
 		fs_root = init_initrd(*((uint32_t*) mboot_ptr->mods_addr));
-		kprintf("content:\n");
+		// print content
+		kprintf("initrd loaded at 0x%.8x to 0x%.8x with:\n",
+						*((uint32_t*) mboot_ptr->mods_addr), pmm_start);
 		dirent_t* node = 0;
 		for (int i = 0; (node = readdir(fs_root, i)) != 0; i++) {
 			fs_node_t* fsnode = finddir(fs_root, node->name);
@@ -75,13 +82,9 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 	init_keyboard_driver();
 
 	kprintf("kernel mode completed\n");
-	// TODO: before entering user mode: you've used kmalloc several times
-	// for scheduling data, that MUST be kernel-only, but currently kheap
-	// allocates data on pages with PAGE_USER bit set
-	// CONCLUSION: another heap
 
-	create_thread(&fake_thread, "thread1", kmalloc(0x400)+0x400);
-	create_thread(&fake_thread, "thread2", kmalloc(0x400)+0x400);
+	create_thread(&fake_thread, "thread1", kmalloc(0x400) + 0x400);
+	create_thread(&fake_thread, "thread2", kmalloc(0x400) + 0x400);
 
 	cpu_idle();
 	return 0;

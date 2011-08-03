@@ -3,33 +3,35 @@
 
 uint8_t pmm_paging_active = 0;
 
-static uint32_t pmm_stack_loc = PMM_STACK_ADDR;
-static uint32_t pmm_stack_max = PMM_STACK_ADDR;
-static uint32_t pmm_location;
+static uint32_t pmm_stack_loc = PMM_STACK_START;
+static uint32_t pmm_stack_max = PMM_STACK_START;
+static uint32_t pmm_location = 0;
 
 // NOTE: if you ever wanted to fuck up something here...
 // pmm_location if physical but identity mapped
-void init_pmm(uint32_t start) {
+void init_pmm(uint32_t pmm_start) {
 	// Ensure the initial page allocation location is page-aligned.
-	pmm_location = (start + 0x1000) & PAGE_MASK;
+	pmm_location = (pmm_start + 0x1000) & PAGE_MASK;
 }
 
 uint32_t pmm_alloc_page() {
-	if (pmm_paging_active) {
-		// sanity check
-		if (PMM_STACK_ADDR >= pmm_stack_loc)
-			panic("PMM Stack: out of memory.");
-		// pop
-		pmm_stack_loc -= sizeof(uint32_t);
-		uint32_t* stack = (uint32_t*) pmm_stack_loc;
-		// NOTE: pmm_stack_loc is a pointer to a pointer TO the free page,
-		// that is also the top of the stack, so we return VALUE
-		// at the stack's top, not pointer to it.
-		return *stack;
-	} else {
-		kprintf("pmm_location alloc: 0x%.8x\n", pmm_location);
-		return pmm_location += 0x1000;
+	// sanity check
+	if (!pmm_paging_active) {
+		// TODO pmm_location allocation is no longer supported
+		//kprintf("pmm_location alloc: 0x%.8x\n", pmm_location);
+		//return pmm_location += 0x1000;
+		panic("PMM location alloc: not supported.");
 	}
+	// sanity check
+	if (PMM_STACK_START >= pmm_stack_loc)
+		panic("PMM Stack: no free pages.");
+	// pop
+	pmm_stack_loc -= sizeof(uint32_t);
+	uint32_t* stack = (uint32_t*) pmm_stack_loc;
+	// NOTE: pmm_stack_loc is a pointer to a pointer TO the free page,
+	// that is also the top of the stack, so we return VALUE
+	// at the stack's top, not pointer to it.
+	return *stack;
 }
 
 void pmm_free_page(uint32_t p) {
@@ -40,12 +42,12 @@ void pmm_free_page(uint32_t p) {
 	// If we've run out of space on the stack...
 	if (pmm_stack_max <= pmm_stack_loc) {
 		// sanity check
-		if (PAGE_DIR_VIRTUAL_ADDR <= pmm_stack_max)
-			panic("PMM Stack: reached page directory addresses.");
+		if (PMM_STACK_END <= pmm_stack_max)
+			panic("PMM Stack: out of mem for free pages.");
 		// Map the page we're currently freeing at the top of the free page stack.
 		map(pmm_stack_max, p, PAGE_PRESENT | PAGE_WRITE);
 		// Increase the free page stack's size by one page.
-		pmm_stack_max += 4096;
+		pmm_stack_max += PAGE_SIZE;
 	} else {
 		// Else we have space on the stack, so push.
 		uint32_t* stack = (uint32_t*) pmm_stack_loc;

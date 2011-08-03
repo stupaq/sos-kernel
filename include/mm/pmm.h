@@ -3,10 +3,9 @@
 
 #include <multiboot.h>
 #include <common.h>
+#include <mm/layout.h>
 
-#define PMM_STACK_ADDR 0xFF7FF000
-
-void init_pmm(uint32_t start);
+void init_pmm(uint32_t pmm_start);
 
 uint32_t pmm_alloc_page();
 

@@ -4,6 +4,11 @@
 
 extern uint8_t pmm_paging_active;
 
+uint32_t pgdir_kernel[1024]__attribute__((aligned(PAGE_SIZE)));
+uint32_t pgtab_lowmem[1024]__attribute__((aligned(PAGE_SIZE)));
+uint32_t pgtab_directory[1024]__attribute__((aligned(PAGE_SIZE)));
+uint32_t pgtab_pmmstack[1024]__attribute__((aligned(PAGE_SIZE)));
+
 page_directory_t* current_directory;
 
 uint32_t* kpage_directory = (uint32_t*) PAGE_DIR_VIRTUAL_ADDR;
@@ -17,43 +22,49 @@ void init_vmm() {
 
 	register_interrupt_handler(14, &page_fault);
 
-	page_directory_t *new_directory = (page_directory_t*) pmm_alloc_page();
-	memset(new_directory, 0, 0x1000);
+	// NOTE: remember that every entry in directory and tables have flags,
+	// to obtain addresses must be and'ed with PAGE_FLAG
 
+	// prepare page directory
+	memset(pgdir_kernel, 0, 0x1000);
 	// id map for the first 4 MB
-	new_directory[0] = pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE;
-	uint32_t* tab = (uint32_t*) (new_directory[0] & PAGE_MASK);
+	pgdir_kernel[0] = (uint32_t) pgtab_lowmem | PAGE_PRESENT | PAGE_WRITE;
 	for (i = 0; i < 1024; i++)
-		tab[i] = i * 0x1000 | PAGE_PRESENT | PAGE_WRITE;
+		pgtab_lowmem[i] = i * 0x1000 | PAGE_PRESENT | PAGE_WRITE;
 
-	uint16_t dir_idir = PGDIR_I_ADDR(PAGE_DIR_VIRTUAL_ADDR);
-	uint16_t dir_itab = PGTAB_I_ADDR(PAGE_DIR_VIRTUAL_ADDR);
+	uint16_t dir_idx = PGDIR_I_ADDR(PAGE_DIR_VIRTUAL_ADDR);
+	uint16_t tab_idx = PGTAB_I_ADDR(PAGE_DIR_VIRTUAL_ADDR);
+
 	// prepare mapping for directory itself
-	new_directory[dir_idir] = pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE;
-	tab = (uint32_t*) (new_directory[dir_idir] & PAGE_MASK);
-	memset(tab, 0, 0x1000);
+	pgdir_kernel[dir_idx] = (uint32_t) pgtab_directory | PAGE_PRESENT
+			| PAGE_WRITE;
+	memset(pgtab_directory, 0, 0x1000);
 
 	// assign mapping for directory
-	tab[dir_itab] = (uint32_t) new_directory | PAGE_PRESENT | PAGE_WRITE;
-	// The last table loops back on the directory itself.
-	new_directory[PGDIR_I_ADDR(PAGE_TABLE_VIRTUAL_ADDR)] =
-			(uint32_t) new_directory | PAGE_PRESENT | PAGE_WRITE;
+	pgtab_directory[tab_idx] = (uint32_t) pgdir_kernel | PAGE_PRESENT
+			| PAGE_WRITE;
+	// the last table loops back on the directory itself
+	pgdir_kernel[PGDIR_I_ADDR(PAGE_TABLE_VIRTUAL_ADDR)] =
+			(uint32_t) pgdir_kernel | PAGE_PRESENT | PAGE_WRITE;
 
-	// set the current directory.
-	switch_page_directory(new_directory);
+	// set the current directory
+	switch_page_directory(pgdir_kernel);
 
 	// enable paging
-	asm volatile ("mov %%cr0, %0" : "=r" (cr0));
-	cr0 |= 0x80000000;
-	asm volatile ("mov %0, %%cr0" : : "r" (cr0));
+	asm volatile("mov %%cr0, %%eax;\
+			orl $0x80000000, %%eax;\
+			mov %%eax, %%cr0;"::);
 
 	// identity mapping pmm stack
-	uint32_t pt_idx = PGDIR_I_ADDR(PMM_STACK_ADDR);
-	kpage_directory[pt_idx] = pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE;
-	// NOTE: there are no tables at this directory
-	memset((void*) kpage_directory[pt_idx], 0, 0x1000);
+	uint32_t pt_idx = PGDIR_I_ADDR(PMM_STACK_START);
+	kpage_directory[pt_idx] = (uint32_t) pgtab_pmmstack | PAGE_PRESENT
+			| PAGE_WRITE;
+	memset((void*) pgtab_pmmstack, 0, 0x1000);
 
-	// Paging is now active. Tell the physical memory manager.
+	// NOTE: remember that every entry in directory and tables have flags,
+	// to obtain addresses must be and'ed with PAGE_FLAG
+
+	// paging active
 	pmm_paging_active = 1;
 
 }
@@ -69,7 +80,8 @@ void map(uint32_t va, uint32_t pa, uint32_t flags) {
 
 	// Find the appropriate page table for 'va'.
 	if (kpage_directory[pt_idx] == 0) {
-		if (va == 0xff7ffffc) panic("break");
+		if (va == 0xff7ffffc)
+			panic("break");
 		// The page table holding this page has not been created yet.
 		kpage_directory[pt_idx] = pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE;
 		memset((void*) kpage_tables[pt_idx * 1024], 0, 0x1000);

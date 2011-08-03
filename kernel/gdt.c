@@ -25,7 +25,8 @@ void init_gdt(uint32_t kstack_ptr) {
 	gdt_set_gate(2, 0, 0xFFFFF, 0x92, 0xCF); // kernel data
 	gdt_set_gate(3, 0, 0xFFFFF, 0xFA, 0xCF); // user code
 	gdt_set_gate(4, 0, 0xFFFFF, 0xF2, 0xCF); // user data
-	// we pass gdt_entry index, kernel stack data segment, kernel stack pointer
+	// we pass gdt_entry index, kernel stack data segment offset
+	// and kernel stack pointer
 	write_tss(5, 0x10, kstack_ptr);
 
 	gdt_flush((uint32_t) &gdt_ptr);

@@ -1,0 +1,20 @@
+#ifndef LAYOUT_H
+#define LAYOUT_H
+
+#define LOWMEM_ID_MAP_START		0x00000000
+#define LOWMEM_ID_MAP_END		0x00400000
+
+#define HEAP_START				0xD0000000
+#define HEAP_END				0xFF000000
+
+// currently kernel resides in low mem
+#define KERNEL_HIGHMEM			0xFF000000
+#define KERNEL_HIGHMEM_LIMIT	0xFF000000
+
+#define PMM_STACK_START			0xFF7FF000
+#define PMM_STACK_END			0xFFBFF000
+
+#define PAGE_DIR_VIRTUAL_ADDR   0xFFBFF000
+#define PAGE_TABLE_VIRTUAL_ADDR 0xFFC00000
+
+#endif // LAYOUT_H

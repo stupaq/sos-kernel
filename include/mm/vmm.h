@@ -2,15 +2,14 @@
 #define VMM_H
 
 #include <common.h>
-
-#define PAGE_DIR_VIRTUAL_ADDR   0xFFBFF000
-#define PAGE_TABLE_VIRTUAL_ADDR 0xFFC00000
+#include <mm/layout.h>
 
 #define PAGE_DIR_IDX(x) ((uint32_t)(x)/1024)
 #define PAGE_TABLE_IDX(x) ((uint32_t)(x)%1024)
 
 #define PGDIR_I_ADDR(x) ((uint32_t)((x)>>22)) // (x>>12)/1024
 #define PGTAB_I_ADDR(x) ((uint32_t)(((x)>>12)&0x3FF)) // (x>>12)%1024
+
 #define PAGE_PRESENT 0x1
 #define PAGE_WRITE 0x2
 #define PAGE_USER 0x4
