@@ -64,21 +64,19 @@ void init_vmm() {
 
 	// identity mapping pmm stack
 	uint32_t idx_dir_pmm = PGDIR_IDX_ADDR(PMM_STACK_START);
-	kprintf("%d\n", idx_dir_pmm);
-	current_directory->directory_virtual[idx_dir_pmm] = (uint32_t) pmm_alloc_page()
-			| PAGE_PRESENT | PAGE_WRITE;
+	current_directory->directory_virtual[idx_dir_pmm] =
+			(uint32_t) pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE;
 	tab_ptr = (uint32_t*) (PAGE_MASK
 			& current_directory->directory_virtual[idx_dir_pmm]);
 	memset((void*) tab_ptr, 0, 0x1000);
 
+	// wtf with those flags, not here - it's simple data
 	// set up tables_virtual (rewrite mm/layout.h into an array)
 	current_directory->tables_virtual =
-			(uint32_t**) ((uint32_t) pmm_alloc_page() | PAGE_PRESENT
-					| PAGE_WRITE);
-	uint32_t** tab_ptr_ptr = (uint32_t**) (PAGE_MASK
-			& (uint32_t) current_directory->tables_virtual);
+			(uint32_t**) ((uint32_t) pmm_alloc_page());
 	for (int i = 0; i < 1024; i++) {
-		tab_ptr_ptr[i] = (uint32_t*) (KERNEL_TABLES_VIRTUAL + i * PAGE_SIZE);
+		current_directory->tables_virtual[i] =
+				(uint32_t*) (KERNEL_TABLES_VIRTUAL + i * PAGE_SIZE);
 	}
 
 	// NOTE: remember that every entry in directory and tables have flags,
@@ -106,14 +104,9 @@ void map(uint32_t va, uint32_t pa, uint32_t flags) {
 	}
 	// TODO: update tables_virtual (not when at kernel directory) (pmalloc)
 
-	kprintf("0x%.8x %d %d 0x%.8x 0x%.8x\n", va, idx_dir, idx_tab,
-			current_directory->directory_virtual[idx_dir],
-			current_directory->tables_virtual[idx_dir]);
-
-	// page table exists, update flags and pa
+	// page table exists, now update flags and pa
 	current_directory->tables_virtual[idx_dir][idx_tab] = (pa & PAGE_MASK)
 			| flags;
-	kprintf("ok: eip: 0x%.8x\n", read_eip());
 }
 
 void unmap(uint32_t va) {

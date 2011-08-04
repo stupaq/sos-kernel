@@ -20,7 +20,9 @@ uint32_t pmm_alloc_page() {
 		// TODO pmm_location allocation is no longer supported
 		// panic("PMM location alloc: not supported.");
 		kprintf("pmm_location alloc: 0x%.8x\n", pmm_location);
-		return pmm_location += PAGE_SIZE;
+		uint32_t addr = pmm_location;
+		pmm_location += PAGE_SIZE;
+		return addr;
 	}
 	// sanity check
 	if (PMM_STACK_START >= pmm_stack_loc)
