@@ -54,7 +54,7 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 	// till now we cannot allocate any page from paging stack
 	pmm_collect_pages(mboot_ptr);
 
-	init_heap();
+	init_kheap();
 
 	// (stack tracing) heap must be initialized
 	kernel_elf = elf_from_multiboot(mboot_ptr);

@@ -7,8 +7,11 @@
 
 #define VIDEO_MEM				0x000B8000
 
-#define HEAP_START				0xD0000000
-#define HEAP_END				0xFF000000
+#define KHEAP_START				0xD0000000
+#define KHEAP_END				0xFD000000
+
+#define PHEAP_START				0xFD000000
+#define PHEAP_END				0xFF000000
 
 // no effect (and currently kernel resides in low mem)
 #define KERNEL_HIGHMEM			0xFF000000

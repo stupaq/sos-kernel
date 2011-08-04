@@ -10,6 +10,8 @@
 #define PROCESS_DYING	4
 
 struct process {
+	page_directory_t* page_directory; // aka page_tables_physical
+	uint32_t* page_tables_virtual;
 	uint32_t page_directory_physical;
 	// better leave above variables as they are (process.s relies on that)
 	uint32_t pid;

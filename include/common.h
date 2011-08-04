@@ -18,7 +18,7 @@ uint16_t inw(uint16_t port);
 
 #include <kernel/panic.h>
 #include <kernel/keyboard.h>
-#include <mm/heap.h>
+#include <mm/kheap.h>
 #include <kprintf.h>
 #include <string.h>
 

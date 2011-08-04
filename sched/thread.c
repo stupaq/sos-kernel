@@ -1,6 +1,5 @@
 #include <sched/thread.h>
 #include <sched/scheduler.h>
-#include <mm/heap.h>
 
 thread_t *current_thread;
 uint32_t next_tid = 0;

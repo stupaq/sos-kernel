@@ -65,7 +65,6 @@ void init_vmm() {
 
 	// paging active
 	pmm_paging_active = 1;
-
 }
 
 void switch_page_directory(page_directory_t* pd) {
@@ -80,8 +79,7 @@ void map(uint32_t va, uint32_t pa, uint32_t flags) {
 	// Find the appropriate page table for 'va'.
 	if (kernel_directory[pt_idx] == 0) {
 		// The page table holding this page has not been created yet.
-		kernel_directory[pt_idx] = pmm_alloc_page() | PAGE_PRESENT
-				| PAGE_WRITE;
+		kernel_directory[pt_idx] = pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE;
 		memset((void*) kernel_tables[pt_idx * 1024], 0, 0x1000);
 	}
 
@@ -98,21 +96,18 @@ void unmap(uint32_t va) {
 
 char get_mapping(uint32_t va, uint32_t *pa) {
 	uint32_t virtual_page = va / 0x1000;
-	uint32_t pt_idx = PAGE_DIR_IDX(virtual_page);
+	uint32_t dir_idx = PAGE_DIR_IDX(virtual_page);
 	// Find the appropriate page table for 'va'.
-	if (kernel_directory[pt_idx] == 0)
+	if (kernel_directory[dir_idx] == 0)
 		return 0;
-
 	if (kernel_tables[virtual_page] != 0) {
 		if (pa)
-			*pa = kernel_tables[virtual_page] & PAGE_MASK;
+			*pa = (kernel_tables[virtual_page] & PAGE_MASK)
+					+ (va & PAGE_OFF_MASK);
+		// NOTE: now it returns physical addres of variable itself, not frame
 		return 1;
 	}
 	return 0;
-}
-
-page_directory_t* clone_directory(page_directory_t* src, uint32_t* phys) {
-	return NULL;
 }
 
 void page_fault(registers_t *regs) {

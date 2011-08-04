@@ -4,13 +4,13 @@
 #include <common.h>
 #include <mm/pmm.h>
 
-typedef struct header {
-	struct header *prev, *next;
+typedef struct kheader {
+	struct kheader* prev,* next;
 	uint32_t allocated :1;
 	uint32_t length :31;
-} header_t;
+} kheader_t;
 
-void init_heap();
+void init_kheap();
 
 // Returns a pointer to a chunk of memory, minimum size 'l' bytes.
 void* kmalloc(uint32_t l);
