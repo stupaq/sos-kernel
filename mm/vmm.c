@@ -1,5 +1,6 @@
 #include <mm/vmm.h>
 #include <mm/pmm.h>
+#include <mm/pheap.h>
 #include <kernel/idt.h>
 
 extern uint8_t pmm_paging_active;
@@ -133,9 +134,32 @@ char get_mapping(uint32_t va, uint32_t* pa) {
 	return 0;
 }
 
+extern void copy_page_physical(uint32_t* dest, uint32_t* src);
+
+static void clone_table(uint32_t* dest, uint32_t* src) {
+	// TODO:
+}
+
 page_directory_t* clone_directory(page_directory_t* src) {
-	// TODO: all
-	return NULL;
+	page_directory_t* dest = kmalloc(sizeof(page_directory_t));
+	dest->directory_virtual = (uint32_t*) pmalloc(&(dest->directory_physical));
+	dest->tables_virtual = kmalloc(sizeof(uint32_t*) * 1024);
+	for (int i = 0; i < 1024; i++) {
+		if (src->directory_virtual[i] == 0)
+			continue;
+		if (src->directory_virtual[i] == __directory.directory_virtual[i]) {
+			dest->directory_virtual[i] = src->directory_virtual[i];
+			dest->tables_virtual[i] = src->tables_virtual[i];
+		} else {
+			uint32_t phys;
+			dest->tables_virtual[i] = (uint32_t*) pmalloc(&phys);
+			dest->directory_virtual[i] = phys | PAGE_PRESENT | PAGE_WRITE
+					| PAGE_USER;
+			// TODO: rewrite flags, copy physical, clone table
+			clone_table(dest->tables_virtual[i], src->tables_virtual[i]);
+		}
+	}
+	return dest;
 }
 
 void page_fault(registers_t *regs) {
