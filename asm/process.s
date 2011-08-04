@@ -15,7 +15,8 @@ cpu_idle:
 	ret
 .end:
 
-global function:read_eip read_eip.end-read_eip
+global read_eip:function read_eip.end-read_eip
 read_eip:
 	pop eax
 	jmp eax
+.end:

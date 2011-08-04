@@ -18,9 +18,9 @@ uint32_t pmm_alloc_page() {
 	// sanity check
 	if (!pmm_paging_active) {
 		// TODO pmm_location allocation is no longer supported
-		//kprintf("pmm_location alloc: 0x%.8x\n", pmm_location);
-		//return pmm_location += 0x1000;
-		panic("PMM location alloc: not supported.");
+		// panic("PMM location alloc: not supported.");
+		kprintf("pmm_location alloc: 0x%.8x\n", pmm_location);
+		return pmm_location += PAGE_SIZE;
 	}
 	// sanity check
 	if (PMM_STACK_START >= pmm_stack_loc)
@@ -79,6 +79,5 @@ void pmm_collect_pages(multiboot_info_elf_t* mboot_ptr) {
 		// so we must add sizeof (uint32_t).
 		i += me->size + sizeof(uint32_t);
 	}
-	// TODO: print rest of memory mapping or remove all those kprintf's
 }
 

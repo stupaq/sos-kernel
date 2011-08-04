@@ -24,4 +24,6 @@ uint16_t inw(uint16_t port);
 
 #endif // COMMON_H_NO_EXTRA_LIBS
 
+extern uint32_t read_eip();
+
 #endif // COMMON_H

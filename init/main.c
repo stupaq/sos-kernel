@@ -38,25 +38,29 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 			(mboot_ptr->mods_count) ?
 					*((uint32_t*) (mboot_ptr->mods_addr + 4)) : (uint32_t) &end;
 
-	// enable paging
-	init_pmm(pmm_start);
-	init_vmm();
-
 	// TODO: remember to set proper video mem in layout
 	init_monitor();
 
 	// after enabling paging set proper gdt
 	init_gdt(kstack_addr);
 	init_idt();
+
+	// enable paging
+	init_pmm(pmm_start);
+	init_vmm();
+
 	init_timer(20);
 
-	kprintf("kernel between 0x%.8x 0x%.8x\n", &code, &end);
-	// till now we cannot allocate any page from paging stack
+	// till now we cannot allocate any page from paging stack (or do any malloc)
 	pmm_collect_pages(mboot_ptr);
 
-	init_kheap();
+	kprintf("kernel between 0x%.8x 0x%.8x\n", &code, &end);
 
-	// (stack tracing) heap must be initialized
+	// now we can use both kheap and pheap
+	// init_kheap();
+	// init_pheap();
+
+	// stack tracing
 	kernel_elf = elf_from_multiboot(mboot_ptr);
 	print_stack_trace();
 

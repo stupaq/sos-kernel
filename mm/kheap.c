@@ -10,9 +10,6 @@ static void glue_chunk(kheader_t* chunk);
 static uint32_t kheap_max = KHEAP_START;
 static kheader_t* kheap_first = 0;
 
-void init_kheap() {
-}
-
 void* kmalloc(uint32_t len) {
 	len += sizeof(kheader_t);
 

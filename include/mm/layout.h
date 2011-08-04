@@ -1,11 +1,18 @@
 #ifndef LAYOUT_H
 #define LAYOUT_H
 
+/**
+ * All these values _MUST_ be page aligned. Boundary between kernel and user data
+ * _MUST_ be page directory entry (1024*0x1000 = 0x400000) aligned
+ */
+
 // no effect
 #define LOWMEM_ID_MAP_START		0x00000000
 #define LOWMEM_ID_MAP_END		0x00400000
 
 #define VIDEO_MEM				0x000B8000
+
+// from this point (0xD000000) starts kernel part of directory
 
 #define KHEAP_START				0xD0000000
 #define KHEAP_END				0xFD000000
