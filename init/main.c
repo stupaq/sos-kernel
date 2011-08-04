@@ -4,8 +4,8 @@
 #include <kernel/idt.h>
 #include <kernel/timer.h>
 #include <kernel/elf.h>
-#include <kernel/scheduler.h>
-#include <kernel/thread.h>
+#include <sched/scheduler.h>
+#include <sched/thread.h>
 #include <mm/pmm.h>
 #include <mm/vmm.h>
 #include <fs/initrd.h>
@@ -35,15 +35,15 @@ int fake_thread(void* arg) {
 int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 	// end of reserved memory (kernel, initrd)
 	uint32_t pmm_start =
-				(mboot_ptr->mods_count) ?
-						*((uint32_t*) (mboot_ptr->mods_addr + 4)) : (uint32_t) &end;
-
-	// TODO: remember to set proper video mem
-	init_monitor();
+			(mboot_ptr->mods_count) ?
+					*((uint32_t*) (mboot_ptr->mods_addr + 4)) : (uint32_t) &end;
 
 	// enable paging
 	init_pmm(pmm_start);
 	init_vmm();
+
+	// TODO: remember to set proper video mem in layout
+	init_monitor();
 
 	// after enabling paging set proper gdt
 	init_gdt(kstack_addr);
@@ -56,20 +56,22 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 
 	init_heap();
 
-	// heap must be initialized before
+	// (stack tracing) heap must be initialized
 	kernel_elf = elf_from_multiboot(mboot_ptr);
 	print_stack_trace();
 
+	// load initrd
 	if (mboot_ptr->mods_count) {
 		// set root filesystem
 		fs_root = init_initrd(*((uint32_t*) mboot_ptr->mods_addr));
+		// debug
 		// print content
 		kprintf("initrd loaded at 0x%.8x to 0x%.8x with:\n",
-						*((uint32_t*) mboot_ptr->mods_addr), pmm_start);
+				*((uint32_t*) mboot_ptr->mods_addr), pmm_start);
 		dirent_t* node = 0;
 		for (int i = 0; (node = readdir(fs_root, i)) != 0; i++) {
 			fs_node_t* fsnode = finddir(fs_root, node->name);
-			kprintf("%.20s\t0x%x\t%d\n", node->name, fsnode->flags,
+			kprintf("\t%.20s\t0x%x\t%d\n", node->name, fsnode->flags,
 					fsnode->length);
 		}
 	}

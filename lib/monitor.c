@@ -1,11 +1,11 @@
 #include <monitor.h>
+#include <mm/layout.h>
 
 #define COLUMNS 80
 #define LINES 25
-#define VIDEO 0xB8000
 
-// we declared it as word, easy access to chars with formatting
-uint16_t* video_mem = (uint16_t*) VIDEO;
+// we declared it as word (uint16_t) for easy access to chars with formatting
+static uint16_t* video_mem = 0;
 // cursor position
 static uint8_t xpos = 0;
 static uint8_t ypos = 0;
@@ -38,12 +38,12 @@ static void update_cursor() {
 }
 
 static void scroll() {
+	int i;
 	uint16_t blank = vga_format_ascii(back_color, fore_color, 0x20);
 	// Row 25 is the end, this means we need to scroll up
 	if (ypos >= 25) {
 		// Move the current text chunk that makes up the screen
 		// back in the buffer by a line
-		int i;
 		for (i = 0 * 80; i < 24 * 80; i++)
 			video_mem[i] = video_mem[i + 80];
 
@@ -54,6 +54,18 @@ static void scroll() {
 		// The cursor should now be on the last line.
 		ypos = 24;
 	}
+}
+
+void init_monitor() {
+	video_mem = (uint16_t*) VIDEO_MEM;
+	uint16_t blank = vga_format_ascii(back_color, fore_color, 0x20);
+
+	for (int i = 0; i < COLUMNS * LINES; i++)
+		video_mem[i] = blank;
+
+	xpos = 0;
+	ypos = 0;
+	update_cursor();
 }
 
 void monitor_put(char c) {
@@ -89,19 +101,6 @@ void monitor_put(char c) {
 
 	// scroll and update cursor
 	scroll();
-	update_cursor();
-}
-
-// clears the screen (with spaces)
-void init_monitor() {
-	uint16_t blank = vga_format_ascii(back_color, fore_color, 0x20);
-
-	int i;
-	for (i = 0; i < COLUMNS * LINES; i++)
-		video_mem[i] = blank;
-
-	xpos = 0;
-	ypos = 0;
 	update_cursor();
 }
 

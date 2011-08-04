@@ -1,4 +1,4 @@
-#include <kernel/scheduler.h>
+#include <sched/scheduler.h>
 #include <mm/heap.h>
 
 thread_t* ready_queue = 0;

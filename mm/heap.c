@@ -59,7 +59,7 @@ void alloc_chunk(uint32_t start, uint32_t len) {
 		panic("Heap: out of memory.");
 	while (start + len > heap_max) {
 		uint32_t page = pmm_alloc_page();
-		map(heap_max, page, PAGE_PRESENT | PAGE_WRITE); // TODO: | PAGE_USER);
+		map(heap_max, page, PAGE_PRESENT | PAGE_WRITE);
 		heap_max += 0x1000;
 	}
 }

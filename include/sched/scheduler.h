@@ -1,7 +1,7 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-#include <kernel/thread.h>
+#include <sched/thread.h>
 #include <common.h>
 
 void init_scheduler(thread_t *initial_thread);

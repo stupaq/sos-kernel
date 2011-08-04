@@ -35,7 +35,7 @@ uint32_t pmm_alloc_page() {
 }
 
 void pmm_free_page(uint32_t p) {
-	// Ignore any page under "location", it contains some important crap
+	// ignore any page under "location", it contains some important crap
 	// and is identity mapped (as all first 4 MB)
 	if (p < pmm_location)
 		return;
@@ -58,11 +58,13 @@ void pmm_free_page(uint32_t p) {
 
 void pmm_collect_pages(multiboot_info_elf_t* mboot_ptr) {
 	uint32_t i = mboot_ptr->mmap_addr;
-	kprintf("kernel paging data end: 0x%.8x\nusable ram:\n", pmm_location);
+	// debug
+	kprintf("ignore pages before: 0x%.8x\nusable ram:\n", pmm_location);
 	while (i < mboot_ptr->mmap_addr + mboot_ptr->mmap_length) {
 		multiboot_memory_map_t *me = (multiboot_memory_map_t*) i;
 		// usable ram?
 		if (me->type == 1) {
+			// debug
 			kprintf("0x%.8x\t0x%.8x\n", me->base_addr_low,
 					me->base_addr_low + me->length_low);
 			uint32_t j;
