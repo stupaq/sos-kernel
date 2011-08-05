@@ -13,6 +13,11 @@ thread_t* init_threading() {
 	return thread;
 }
 
+uint32_t* allocate_stack(uint32_t size) {
+	// offset of size * sizof(uint8_t) / sizeof(uint32_t)
+	return (uint32_t*) kmalloc(size) + size / 4;
+}
+
 thread_t* create_thread(int(*fn)(void*), void* arg, uint32_t* stack) {
 	thread_t* thread = kmalloc(sizeof(thread_t));
 	memset(thread, 0, sizeof(thread_t));

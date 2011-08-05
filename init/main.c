@@ -89,8 +89,8 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 
 	kprintf("kernel mode completed\n");
 
-	create_thread(&fake_thread, "thread1", kmalloc(0x400) + 0x400);
-	create_thread(&fake_thread, "thread2", kmalloc(0x400) + 0x400);
+	create_thread(&fake_thread, "thread1", allocate_stack(0x1000));
+	create_thread(&fake_thread, "thread2", allocate_stack(0x1000));
 
 	cpu_idle();
 	return 0;

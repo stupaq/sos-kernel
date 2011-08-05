@@ -24,14 +24,14 @@ void init_vmm() {
 	// prepare page directory
 	__directory.directory_physical = (uint32_t) (pmm_alloc_page() | PAGE_PRESENT
 			| PAGE_WRITE);
-	uint32_t* dir_ptr = (uint32_t*) (PAGE_MASK
+	uint32_t* dir_ptr = (uint32_t*) (PAGE_ADDR_MASK
 			& __directory.directory_physical);
-	memset(dir_ptr, 0, 0x1000);
+	memset(dir_ptr, 0, PAGE_SIZE);
 
 	// id map for the first 4 MB
 	dir_ptr[0] = (uint32_t) pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE;
 	// you do KNOW what those tmp_tab's stands for
-	uint32_t* tab_ptr = (uint32_t*) (PAGE_MASK & dir_ptr[0]);
+	uint32_t* tab_ptr = (uint32_t*) (PAGE_ADDR_MASK & dir_ptr[0]);
 	for (int i = 0; i < 1024; i++)
 		tab_ptr[i] = i * 0x1000 | PAGE_PRESENT | PAGE_WRITE;
 
@@ -39,8 +39,8 @@ void init_vmm() {
 	uint16_t idx_tab = PGTAB_IDX_ADDR(KERNEL_DIR_VIRTUAL);
 	// prepare mapping for directory itself
 	dir_ptr[idx_dir] = (uint32_t) pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE;
-	tab_ptr = (uint32_t*) (PAGE_MASK & dir_ptr[idx_dir]);
-	memset((void*) tab_ptr, 0, 0x1000);
+	tab_ptr = (uint32_t*) (PAGE_ADDR_MASK & dir_ptr[idx_dir]);
+	memset((void*) tab_ptr, 0, PAGE_SIZE);
 	// assign mapping for directory
 	tab_ptr[idx_tab] = (uint32_t) dir_ptr | PAGE_PRESENT | PAGE_WRITE;
 
@@ -67,9 +67,9 @@ void init_vmm() {
 	uint32_t idx_dir_pmm = PGDIR_IDX_ADDR(PMM_STACK_START);
 	current_directory->directory_virtual[idx_dir_pmm] =
 			(uint32_t) pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE;
-	tab_ptr = (uint32_t*) (PAGE_MASK
+	tab_ptr = (uint32_t*) (PAGE_ADDR_MASK
 			& current_directory->directory_virtual[idx_dir_pmm]);
-	memset((void*) tab_ptr, 0, 0x1000);
+	memset((void*) tab_ptr, 0, PAGE_SIZE);
 
 	// wtf with those flags, not here - it's simple data
 	// set up tables_virtual (rewrite mm/layout.h into an array)
@@ -92,24 +92,28 @@ void switch_page_directory(page_directory_t* dir) {
 	asm volatile("mov %0, %%cr3" : : "r" (dir->directory_physical));
 }
 
+// TODO: do we have to update __directory too?
 void map(uint32_t va, uint32_t pa, uint32_t flags) {
 	uint32_t idx_dir = PGDIR_IDX_ADDR(va);
 	uint32_t idx_tab = PGTAB_IDX_ADDR(va);
 
-	// Find the appropriate page table for 'va'.
+	// find appropriate pagetable for va
 	if (current_directory->directory_virtual[idx_dir] == 0) {
-		// The page table holding this page has not been created yet.
-		current_directory->directory_virtual[idx_dir] = pmm_alloc_page()
-				| PAGE_PRESENT | PAGE_WRITE;
+		// create pagetable holding this page
+		uint32_t phys;
+		// TODO: this code need to be revised
+		current_directory->tables_virtual[idx_dir] = pmalloc(&phys);
+		current_directory->directory_virtual[idx_dir] = phys | PAGE_PRESENT
+				| PAGE_WRITE;
 		memset((void*) current_directory->tables_virtual[idx_dir], 0, 0x1000);
 	}
-	// TODO: update tables_virtual (not when at kernel directory) (pmalloc)
 
 	// page table exists, now update flags and pa
-	current_directory->tables_virtual[idx_dir][idx_tab] = (pa & PAGE_MASK)
+	current_directory->tables_virtual[idx_dir][idx_tab] = (pa & PAGE_ADDR_MASK)
 			| flags;
 }
 
+// TODO: do we have to update __directory too?
 void unmap(uint32_t va) {
 	uint32_t idx_dir = PGDIR_IDX_ADDR(va);
 	uint32_t idx_tab = PGTAB_IDX_ADDR(va);
@@ -118,6 +122,7 @@ void unmap(uint32_t va) {
 	asm volatile("invlpg (%0)" : : "a" (va));
 }
 
+// TODO: do we have to update __directory too?
 char get_mapping(uint32_t va, uint32_t* pa) {
 	uint32_t idx_dir = PGDIR_IDX_ADDR(va);
 	uint32_t idx_tab = PGTAB_IDX_ADDR(va);
@@ -127,7 +132,7 @@ char get_mapping(uint32_t va, uint32_t* pa) {
 	if (current_directory->tables_virtual[idx_dir][idx_tab] != 0) {
 		if (pa)
 			*pa = (current_directory->tables_virtual[idx_dir][idx_tab]
-					& PAGE_MASK) + (va & PAGE_OFFSET_MASK);
+					& PAGE_ADDR_MASK) + (va & PAGE_FLAGS_MASK);
 		// NOTE: now it returns physical addres of variable itself, not frame
 		return 1;
 	}
@@ -136,14 +141,29 @@ char get_mapping(uint32_t va, uint32_t* pa) {
 
 extern void copy_page_physical(uint32_t* dest, uint32_t* src);
 
-static void clone_table(uint32_t* dest, uint32_t* src) {
-	// TODO:
+// TODO: do we have to update __directory too?
+static uint32_t* clone_table(uint32_t* src, uint32_t* phys) {
+	uint32_t* dest = (uint32_t*) pmalloc(phys);
+	memset((void*) dest, 0, PAGE_SIZE);
+	for (int i = 0; i < 1024; i++) {
+		if (src[i] == 0)
+			continue;
+		// TODO: or pmalloc?
+		dest[i] = pmm_alloc_page();
+		copy_page_physical((uint32_t*) dest[i],
+				(uint32_t*) (PAGE_ADDR_MASK & src[i]));
+		dest[i] |= (PAGE_FLAGS_MASK & src[i]);
+	}
+	return dest;
 }
 
+// TODO: do we have to update __directory too?
 page_directory_t* clone_directory(page_directory_t* src) {
 	page_directory_t* dest = kmalloc(sizeof(page_directory_t));
 	dest->directory_virtual = (uint32_t*) pmalloc(&(dest->directory_physical));
+	memset((void*) dest->directory_virtual, 0, PAGE_SIZE);
 	dest->tables_virtual = kmalloc(sizeof(uint32_t*) * 1024);
+	memset((void*) dest->tables_virtual, 0, PAGE_SIZE);
 	for (int i = 0; i < 1024; i++) {
 		if (src->directory_virtual[i] == 0)
 			continue;
@@ -152,10 +172,10 @@ page_directory_t* clone_directory(page_directory_t* src) {
 			dest->tables_virtual[i] = src->tables_virtual[i];
 		} else {
 			uint32_t phys;
-			dest->tables_virtual[i] = (uint32_t*) pmalloc(&phys);
+			dest->tables_virtual[i] = clone_table(src->tables_virtual[i],
+					&phys);
 			dest->directory_virtual[i] = phys | PAGE_PRESENT | PAGE_WRITE
 					| PAGE_USER;
-			// TODO: rewrite flags, copy physical, clone table
 			clone_table(dest->tables_virtual[i], src->tables_virtual[i]);
 		}
 	}

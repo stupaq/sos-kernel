@@ -11,14 +11,12 @@ static uint32_t pmm_location = 0;
 // pmm_location if physical but identity mapped
 void init_pmm(uint32_t pmm_start) {
 	// Ensure the initial page allocation location is page-aligned.
-	pmm_location = (pmm_start + 0x1000) & PAGE_MASK;
+	pmm_location = (pmm_start + PAGE_SIZE) & PAGE_ADDR_MASK;
 }
 
 uint32_t pmm_alloc_page() {
 	// sanity check
 	if (!pmm_paging_active) {
-		// TODO pmm_location allocation is no longer supported
-		// panic("PMM location alloc: not supported.");
 		kprintf("pmm_location alloc: 0x%.8x\n", pmm_location);
 		uint32_t addr = pmm_location;
 		pmm_location += PAGE_SIZE;
@@ -37,6 +35,7 @@ uint32_t pmm_alloc_page() {
 }
 
 void pmm_free_page(uint32_t p) {
+	p &= PAGE_ADDR_MASK;
 	// ignore any page under "location", it contains some important crap
 	// and is identity mapped (as all first 4 MB)
 	if (p < pmm_location)

@@ -18,6 +18,8 @@ typedef struct thread thread_t;
 
 thread_t* init_threading();
 
+uint32_t* allocate_stack(uint32_t size);
+
 thread_t* create_thread(int(*fn)(void*), void* arg, uint32_t* stack);
 
 void switch_thread(thread_t* next);

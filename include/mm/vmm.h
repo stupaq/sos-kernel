@@ -16,8 +16,8 @@
 #define PAGE_WRITE 0x2
 #define PAGE_USER 0x4
 
-#define PAGE_MASK 0xFFFFF000
-#define PAGE_OFFSET_MASK 0xFFF
+#define PAGE_ADDR_MASK 0xFFFFF000
+#define PAGE_FLAGS_MASK 0xFFF
 
 struct page_directory {
 	uint32_t directory_physical; // physical address of tables_physical (cr3)
