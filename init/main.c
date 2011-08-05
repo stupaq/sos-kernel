@@ -41,20 +41,24 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 	// TODO: remember to set proper video mem in layout
 	init_monitor();
 
-	// after enabling paging set proper gdt
-	init_gdt(kstack_addr);
+	// setup interrupts (before first register_handler())
 	init_idt();
 
-	// enable paging
+	// enable paging (which registers handler)
 	init_pmm(pmm_start);
 	init_vmm();
 
+	// after enabling paging set proper gdt
+	init_gdt(kstack_addr);
+
+	// and setup pit
 	init_timer(20);
 
 	// till now we cannot allocate any page from paging stack (or do any malloc)
 	pmm_collect_pages(mboot_ptr);
 
-	kprintf("kernel between 0x%.8x 0x%.8x\n", &code, &end);
+	kprintf("kernel between 0x%.8x 0x%.8x mboot 0x%.8x\n", &code, &end,
+			mboot_ptr);
 
 	// now we can use both kheap and pheap
 	// init_kheap();
@@ -83,7 +87,8 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 	// enable interrupts
 	asm volatile("sti");
 
-	init_scheduler(init_threading());
+	thread_t* kernel_thread = init_threading();
+	init_scheduler(kernel_thread);
 
 	init_keyboard_driver();
 
@@ -92,6 +97,9 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 	create_thread(&fake_thread, "thread1", allocate_stack(0x1000));
 	create_thread(&fake_thread, "thread2", allocate_stack(0x1000));
 
+	for(;;)
+		monitor_put(keyboard_getchar());
+
 	cpu_idle();
-	return 0;
+	return 0xBEEFCAFE;
 }

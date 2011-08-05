@@ -102,7 +102,8 @@ void map(uint32_t va, uint32_t pa, uint32_t flags) {
 		// create pagetable holding this page
 		uint32_t phys;
 		// TODO: this code need to be revised
-		current_directory->tables_virtual[idx_dir] = pmalloc(&phys);
+		//current_directory->tables_virtual[idx_dir] = pmalloc(&phys);
+		phys = pmm_alloc_page();
 		current_directory->directory_virtual[idx_dir] = phys | PAGE_PRESENT
 				| PAGE_WRITE;
 		memset((void*) current_directory->tables_virtual[idx_dir], 0, 0x1000);

@@ -3,6 +3,7 @@
 
 #include <common.h>
 #include <sched/thread.h>
+#include <sched/task.h>
 
 void init_scheduler(thread_t *initial_thread);
 
