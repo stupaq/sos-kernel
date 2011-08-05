@@ -1,8 +1,11 @@
 #include <mm/pheap.h>
 #include <mm/vmm.h>
 
-static pheader_t pheap_free = 0;
+static pheader_t* pheap_free = 0;
 static uint32_t pheap_max = PHEAP_START;
+
+void init_pheap() {
+}
 
 // TODO: completely wrong
 void* pmalloc(uint32_t* phys) {
@@ -10,8 +13,7 @@ void* pmalloc(uint32_t* phys) {
 		panic("PHEAP: out of memory.");
 	uint32_t va, pa;
 	if (pheap_free) {
-		va = (uint32_t) pheap_free;
-		pheap_free = (pheader_t) *pheap_free;
+		// TODO:
 	} else {
 		va = pheap_max;
 		pheap_max += PAGE_SIZE;
@@ -23,12 +25,13 @@ void* pmalloc(uint32_t* phys) {
 	return (void*) va;
 }
 
+void* pmalloc_zero(uint32_t* phys) {
+	uint32_t* addr = pmalloc(phys);
+	memset(addr, 0, PAGE_SIZE);
+	return addr;
+}
+
 void pfree(uint32_t addr) {
-	if (addr == pheap_max - PAGE_SIZE) {
-		pheap_max -= PAGE_SIZE;
-	} else {
-		*((uint32_t*) addr) = (uint32_t) pheap_free;
-		pheap_free = (pheader_t) addr;
-	}
+	// TODO:
 	unmap(addr);
 }

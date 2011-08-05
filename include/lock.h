@@ -2,7 +2,7 @@
 #define LOCK_H
 
 #include <sched/thread.h>
-#include <sched/scheduler.h>
+#include <sched/sched.h>
 #include <common.h>
 
 #define SPINLOCK_LOCKED 0

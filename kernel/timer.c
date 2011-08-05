@@ -1,6 +1,6 @@
 #include <kernel/timer.h>
 #include <kernel/idt.h>
-#include <sched/scheduler.h>
+#include <sched/sched.h>
 #include <common.h>
 
 uint32_t tick = 0;

@@ -1,16 +1,16 @@
 #include <sched/thread.h>
-#include <sched/scheduler.h>
 
-thread_t *current_thread;
+// sched.c and thread.s relie on that
+thread_t* current_thread = 0;
 uint32_t next_tid = 0;
 
 void thread_exit();
 
 thread_t* init_threading() {
-	thread_t* thread = kmalloc(sizeof(thread_t));
-	thread->tid = next_tid++;
-	current_thread = thread;
-	return thread;
+	current_thread = kmalloc_zero(sizeof(thread_t));
+	current_thread->tid = next_tid++;
+	current_thread->state = THREAD_RUNNING;
+	return current_thread;
 }
 
 uint32_t* allocate_stack(uint32_t size) {
@@ -19,9 +19,9 @@ uint32_t* allocate_stack(uint32_t size) {
 }
 
 thread_t* create_thread(int(*fn)(void*), void* arg, uint32_t* stack) {
-	thread_t* thread = kmalloc(sizeof(thread_t));
-	memset(thread, 0, sizeof(thread_t));
+	thread_t* thread = kmalloc_zero(sizeof(thread_t));
 	thread->tid = next_tid++;
+	thread->state = THREAD_RUNNING;
 
 	*--stack = (uint32_t) arg;
 	*--stack = (uint32_t) &thread_exit;
@@ -30,7 +30,6 @@ thread_t* create_thread(int(*fn)(void*), void* arg, uint32_t* stack) {
 	thread->esp = (uint32_t) stack;
 	thread->ebp = 0;
 	thread->eflags = 0x200; // enabling interrupts on ret
-	thread_is_ready(thread);
 
 	return thread;
 }

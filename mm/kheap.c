@@ -10,6 +10,9 @@ static void glue_chunk(kheader_t* chunk);
 static uint32_t kheap_max = KHEAP_START;
 static kheader_t* kheap_first = 0;
 
+void init_kheap() {
+}
+
 void* kmalloc(uint32_t len) {
 	len += sizeof(kheader_t);
 
@@ -42,6 +45,12 @@ void* kmalloc(uint32_t len) {
 	prev_header->next = cur_header;
 
 	return (void*) (chunk_start + sizeof(kheader_t));
+}
+
+void* kmalloc_zero(uint32_t size) {
+	uint32_t* addr = kmalloc(size);
+	memset(addr, 0, size);
+	return addr;
 }
 
 void kfree(void *p) {

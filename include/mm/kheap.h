@@ -10,8 +10,13 @@ typedef struct kheader {
 	uint32_t length :31;
 } kheader_t;
 
+void init_kheap();
+
 // Returns a pointer to a chunk of memory, minimum size 'l' bytes.
 void* kmalloc(uint32_t l);
+
+// as above but chunk is initialized with zeroes
+void* kmalloc_zero(uint32_t size);
 
 // Takes a chunk of memory allocated with kmalloc, and returns it to the pool of usable memory.
 void kfree(void *p);

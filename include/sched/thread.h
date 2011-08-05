@@ -12,8 +12,7 @@ struct thread {
 	// better leave above variables as they are (thread.s relies on that)
 	uint32_t tid;
 	uint8_t state;
-	struct thread* next; // at the end (explanation in thread.s)
-}__attribute__((packed));
+};
 typedef struct thread thread_t;
 
 thread_t* init_threading();

@@ -4,10 +4,11 @@
 #include <kernel/idt.h>
 #include <kernel/timer.h>
 #include <kernel/elf.h>
-#include <sched/scheduler.h>
+#include <sched/sched.h>
 #include <sched/thread.h>
 #include <mm/pmm.h>
 #include <mm/vmm.h>
+#include <mm/pheap.h>
 #include <fs/initrd.h>
 #include <fs/fs.h>
 #include <monitor.h>
@@ -38,7 +39,7 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 			(mboot_ptr->mods_count) ?
 					*((uint32_t*) (mboot_ptr->mods_addr + 4)) : (uint32_t) &end;
 
-	// TODO: remember to set proper video mem in layout
+	// TODO: remember to set proper video mem in layout (in case of highmem)
 	init_monitor();
 
 	// setup interrupts (before first register_handler())
@@ -52,17 +53,19 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 	init_gdt(kstack_addr);
 
 	// and setup pit
-	init_timer(20);
+	init_timer(1);
 
 	// till now we cannot allocate any page from paging stack (or do any malloc)
 	pmm_collect_pages(mboot_ptr);
 
+	// now we can use both kheap and pheap
+	init_kheap();
+	// after kheap init!
+	init_pheap();
+
+	// some debug
 	kprintf("kernel between 0x%.8x 0x%.8x mboot 0x%.8x\n", &code, &end,
 			mboot_ptr);
-
-	// now we can use both kheap and pheap
-	// init_kheap();
-	// init_pheap();
 
 	// stack tracing
 	kernel_elf = elf_from_multiboot(mboot_ptr);
@@ -88,14 +91,15 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 	asm volatile("sti");
 
 	thread_t* kernel_thread = init_threading();
-	init_scheduler(kernel_thread);
+	task_t* kernel_task = init_tasking(kernel_thread);
+	init_scheduler(kernel_task);
 
 	init_keyboard_driver();
 
 	kprintf("kernel mode completed\n");
 
-	create_thread(&fake_thread, "thread1", allocate_stack(0x1000));
-	create_thread(&fake_thread, "thread2", allocate_stack(0x1000));
+	add_thread(kernel_task, create_thread(&fake_thread, "thread1", allocate_stack(0x1000)));
+	add_thread(kernel_task, create_thread(&fake_thread, "thread2", allocate_stack(0x1000)));
 
 	for(;;)
 		monitor_put(keyboard_getchar());

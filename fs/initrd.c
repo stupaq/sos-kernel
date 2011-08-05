@@ -8,7 +8,8 @@ initrd_file_header_t* file_headers;
 fs_node_t* initrd_root; // initrd_root (will become /)
 fs_node_t* initrd_dev; // directory node for /dev
 fs_node_t* root_nodes;
-int nroot_nodes;
+// TODO: changed to unsigned
+uint32_t nroot_nodes;
 
 struct dirent dirent;
 
@@ -41,9 +42,7 @@ static struct dirent* initrd_readdir(fs_node_t* node, uint32_t index) {
 static fs_node_t* initrd_finddir(fs_node_t* node, char* name) {
 	if (node == initrd_root && !strcmp(name, "dev"))
 		return initrd_dev;
-
-	int i;
-	for (i = 0; i < nroot_nodes; i++)
+	for (uint32_t i = 0; i < nroot_nodes; i++)
 		if (!strcmp(name, root_nodes[i].name))
 			return &root_nodes[i];
 	return 0;
@@ -54,17 +53,16 @@ fs_node_t* init_initrd(uint32_t location) {
 	file_headers = (initrd_file_header_t*) (location + sizeof(initrd_header_t));
 
 	// initialise the root directory.
-	initrd_root = (fs_node_t*) kmalloc(sizeof(fs_node_t));
-	memset(initrd_root, 0, sizeof(fs_node_t));
+	initrd_root = (fs_node_t*) kmalloc_zero(sizeof(fs_node_t));
 	strcpy(initrd_root->name, "initrd");
 	initrd_root->flags = FS_DIRECTORY;
 	initrd_root->readdir = &initrd_readdir;
 	initrd_root->finddir = &initrd_finddir;
 
 	// initialise the /dev directory
-	initrd_dev = (fs_node_t*) kmalloc(sizeof(fs_node_t));
+	initrd_dev = (fs_node_t*) kmalloc_zero(sizeof(fs_node_t));
+	// TODO there was: first assign name, then memset to sero all fs_node_to
 	strcpy(initrd_dev->name, "dev");
-	memset(initrd_dev, 0, sizeof(fs_node_t));
 	initrd_dev->flags = FS_DIRECTORY;
 	initrd_dev->readdir = &initrd_readdir;
 	initrd_dev->finddir = &initrd_finddir;
@@ -75,7 +73,7 @@ fs_node_t* init_initrd(uint32_t location) {
 	memset(root_nodes, 0, sizeof(fs_node_t) * initrd_header->nfiles);
 	nroot_nodes = initrd_header->nfiles;
 
-	for (int i = 0; i < initrd_header->nfiles; i++) {
+	for (uint32_t i = 0; i < nroot_nodes; i++) {
 		if (HEADER_MAGIC != file_headers[i].magic)
 			panic("Initial ramdisk corrupted.");
 		// offset from start of ramdisk + location = offset from begin of memory

@@ -40,7 +40,7 @@ void init_vmm() {
 	// prepare mapping for directory itself
 	dir_ptr[idx_dir] = (uint32_t) pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE;
 	tab_ptr = (uint32_t*) (PAGE_ADDR_MASK & dir_ptr[idx_dir]);
-	memset((void*) tab_ptr, 0, PAGE_SIZE);
+	memset(tab_ptr, 0, PAGE_SIZE);
 	// assign mapping for directory
 	tab_ptr[idx_tab] = (uint32_t) dir_ptr | PAGE_PRESENT | PAGE_WRITE;
 
@@ -69,7 +69,7 @@ void init_vmm() {
 			(uint32_t) pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE;
 	tab_ptr = (uint32_t*) (PAGE_ADDR_MASK
 			& current_directory->directory_virtual[idx_dir_pmm]);
-	memset((void*) tab_ptr, 0, PAGE_SIZE);
+	memset(tab_ptr, 0, PAGE_SIZE);
 
 	// wtf with those flags, not here - it's simple data
 	// set up tables_virtual (rewrite mm/layout.h into an array)
@@ -106,7 +106,7 @@ void map(uint32_t va, uint32_t pa, uint32_t flags) {
 		phys = pmm_alloc_page();
 		current_directory->directory_virtual[idx_dir] = phys | PAGE_PRESENT
 				| PAGE_WRITE;
-		memset((void*) current_directory->tables_virtual[idx_dir], 0, 0x1000);
+		memset(current_directory->tables_virtual[idx_dir], 0, 0x1000);
 	}
 
 	// page table exists, now update flags and pa
@@ -145,7 +145,7 @@ extern void copy_page_physical(uint32_t* dest, uint32_t* src);
 // TODO: do we have to update __directory too?
 static uint32_t* clone_table(uint32_t* src, uint32_t* phys) {
 	uint32_t* dest = (uint32_t*) pmalloc(phys);
-	memset((void*) dest, 0, PAGE_SIZE);
+	memset(dest, 0, PAGE_SIZE);
 	for (int i = 0; i < 1024; i++) {
 		if (src[i] == 0)
 			continue;
@@ -162,9 +162,8 @@ static uint32_t* clone_table(uint32_t* src, uint32_t* phys) {
 page_directory_t* clone_directory(page_directory_t* src) {
 	page_directory_t* dest = kmalloc(sizeof(page_directory_t));
 	dest->directory_virtual = (uint32_t*) pmalloc(&(dest->directory_physical));
-	memset((void*) dest->directory_virtual, 0, PAGE_SIZE);
-	dest->tables_virtual = kmalloc(sizeof(uint32_t*) * 1024);
-	memset((void*) dest->tables_virtual, 0, PAGE_SIZE);
+	memset(dest->directory_virtual, 0, PAGE_SIZE);
+	dest->tables_virtual = kmalloc_zero(sizeof(uint32_t*) * 1024);
 	for (int i = 0; i < 1024; i++) {
 		if (src->directory_virtual[i] == 0)
 			continue;

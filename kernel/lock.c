@@ -1,4 +1,3 @@
-#include <sched/scheduler.h>
 #include <lock.h>
 #include <common.h>
 #include <monitor.h>
