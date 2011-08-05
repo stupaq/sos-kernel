@@ -32,6 +32,7 @@ void schedule() {
 				new_task = (task_t*) list_current(tasks);
 				// if has no threads - remove
 				if (list_empty(new_task->threads)) {
+					destroy_task(new_task);
 					list_remove(tasks);
 					new_task = 0;
 				} else
@@ -53,6 +54,7 @@ void schedule() {
 		// remove thread if terminated
 		switch (new_thread->state) {
 		case THREAD_DYING:
+			destroy_thread(new_thread);
 			list_remove(threads);
 		case THREAD_WAITING:
 			new_thread = 0;

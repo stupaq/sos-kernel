@@ -22,6 +22,8 @@ task_t* init_tasking(thread_t* init_thread);
 
 task_t* create_task(thread_t* main_thread, page_directory_t* page_directory);
 
+void destroy_task(task_t* task);
+
 void add_thread(task_t* task, thread_t* thread);
 
 void switch_task(task_t* next);

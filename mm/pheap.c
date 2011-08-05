@@ -7,13 +7,15 @@ static uint32_t pheap_max = PHEAP_START;
 void init_pheap() {
 }
 
-// TODO: completely wrong
 void* pmalloc(uint32_t* phys) {
 	if (PHEAP_END <= pheap_max)
 		panic("PHEAP: out of memory.");
 	uint32_t va, pa;
 	if (pheap_free) {
-		// TODO:
+		pheader_t* header = pheap_free;
+		va = header->addr;
+		pheap_free = header->next;
+		kfree(header);
 	} else {
 		va = pheap_max;
 		pheap_max += PAGE_SIZE;
@@ -31,7 +33,14 @@ void* pmalloc_zero(uint32_t* phys) {
 	return addr;
 }
 
-void pfree(uint32_t addr) {
-	// TODO:
-	unmap(addr);
+void pfree(uint32_t va) {
+	if (va + PAGE_SIZE == pheap_max) {
+		pheap_max -= PAGE_SIZE;
+	} else {
+		pheader_t* header = kmalloc(sizeof(pheader_t));
+		header->addr = va;
+		header->next = pheap_free;
+		pheap_free = header;
+	}
+	unmap(va);
 }

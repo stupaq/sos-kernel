@@ -23,6 +23,7 @@ thread_t* create_thread(int(*fn)(void*), void* arg, uint32_t* stack) {
 	thread->tid = next_tid++;
 	thread->state = THREAD_RUNNING;
 
+	// __cdecl convetion
 	*--stack = (uint32_t) arg;
 	*--stack = (uint32_t) &thread_exit;
 	*--stack = (uint32_t) fn;
@@ -32,6 +33,10 @@ thread_t* create_thread(int(*fn)(void*), void* arg, uint32_t* stack) {
 	thread->eflags = 0x200; // enabling interrupts on ret
 
 	return thread;
+}
+
+void destroy_thread(thread_t* thread) {
+	kfree(thread);
 }
 
 void thread_exit() {

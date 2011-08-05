@@ -12,6 +12,19 @@ list_entry_t* list_entry_new() {
 	return kmalloc_zero(sizeof(list_entry_t));
 }
 
+void destroy_list(list_t* list) {
+	list_rewind(list);
+	while(!list_empty(list))
+		list_remove(list);
+	// remove guardian
+	kfree(list->head);
+	kfree(list);
+}
+
+void destroy_list_entry(list_entry_t* entry) {
+	kfree(entry);
+}
+
 uint32_t* list_current(list_t* list) {
 	if (list->prev->next)
 		return list->prev->next->entry;
@@ -51,7 +64,7 @@ void list_remove(list_t* list) {
 	list_entry_t* entry = list->prev->next;
 	if (entry) {
 		list->prev = entry->next;
-		kfree(entry);
+		destroy_list_entry(entry);
 	}
 }
 

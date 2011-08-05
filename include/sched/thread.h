@@ -21,6 +21,8 @@ uint32_t* allocate_stack(uint32_t size);
 
 thread_t* create_thread(int(*fn)(void*), void* arg, uint32_t* stack);
 
+void destroy_thread(thread_t* thread);
+
 void switch_thread(thread_t* next);
 
 #endif

@@ -20,6 +20,15 @@ task_t* create_task(thread_t* main_thread, page_directory_t* directory) {
 	return task;
 }
 
+void destroy_task(task_t* task) {
+	list_rewind(task->threads);
+	while(!list_is_end(task->threads))
+		destroy_thread((thread_t*) list_next(task->threads));
+	destroy_list(task->threads);
+	// TODO: remove page directory
+	kfree(task);
+}
+
 void add_thread(task_t* task, thread_t* thread) {
 	list_push_back(task->threads, (uint32_t*) thread);
 }

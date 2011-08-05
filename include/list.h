@@ -18,6 +18,10 @@ list_t* list_new();
 
 list_entry_t* list_entry_new();
 
+void destroy_list(list_t* list);
+
+void destroy_list_entry(list_entry_t* entry);
+
 uint8_t list_empty(list_t* list);
 
 uint32_t* list_current(list_t* list);
