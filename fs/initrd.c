@@ -61,7 +61,7 @@ fs_node_t* init_initrd(uint32_t location) {
 
 	// initialise the /dev directory
 	initrd_dev = (fs_node_t*) kmalloc_zero(sizeof(fs_node_t));
-	// TODO there was: first assign name, then memset to sero all fs_node_to
+	// TODO there was: first assign name, then memset to zero all fs_node_to
 	strcpy(initrd_dev->name, "dev");
 	initrd_dev->flags = FS_DIRECTORY;
 	initrd_dev->readdir = &initrd_readdir;

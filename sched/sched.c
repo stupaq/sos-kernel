@@ -26,7 +26,7 @@ void schedule() {
 			// maybe reached end
 			if (list_is_end(tasks))
 				list_rewind(tasks);
-			// get task
+			// choose task
 			task_t* new_task = 0;
 			do {
 				new_task = (task_t*) list_current(tasks);
@@ -42,8 +42,8 @@ void schedule() {
 			threads = new_task->threads;
 			// now decide if we have to switch address space
 			if (new_task != current_task) {
-				// change address space
-				// TODO:
+				// change address space (page directory)
+				switch_page_directory(new_task->page_directory);
 				kprintf("process: %d\n", new_task->pid);
 				// below must by done! either by c or asm code
 				current_task = new_task;
@@ -69,6 +69,6 @@ void schedule() {
 	// switch thread if needed
 	if (new_thread != current_thread) {
 		switch_thread(new_thread);
-		// switch_thread takes care of that: current_thread = new_thread;
+		// current_thread = new_thread; // switch_task does that
 	}
 }

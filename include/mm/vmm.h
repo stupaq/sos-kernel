@@ -49,4 +49,7 @@ char get_mapping(uint32_t va, uint32_t* pa);
 // addresses in proper variables.
 page_directory_t* clone_directory(page_directory_t* src);
 
+// Deletes page directory freeing occupied memory
+void destroy_directory(page_directory_t* dir);
+
 #endif

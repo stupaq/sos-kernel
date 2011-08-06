@@ -182,6 +182,11 @@ page_directory_t* clone_directory(page_directory_t* src) {
 	return dest;
 }
 
+// TODO: do we have to update __directory too?
+void destroy_directory(page_directory_t* dir) {
+	// TODO
+}
+
 void page_fault(registers_t *regs) {
 	uint32_t cr2;
 	asm volatile("mov %%cr2, %0" : "=r" (cr2));

@@ -81,4 +81,3 @@ void pmm_collect_pages(multiboot_info_elf_t* mboot_ptr) {
 		i += me->size + sizeof(uint32_t);
 	}
 }
-

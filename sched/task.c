@@ -25,7 +25,7 @@ void destroy_task(task_t* task) {
 	while(!list_is_end(task->threads))
 		destroy_thread((thread_t*) list_next(task->threads));
 	destroy_list(task->threads);
-	// TODO: remove page directory
+	destroy_directory(task->page_directory);
 	kfree(task);
 }
 
