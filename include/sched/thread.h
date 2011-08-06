@@ -10,12 +10,13 @@
 struct thread {
 	uint32_t esp, ebp, ebx, esi, edi, eflags;
 	// better leave above variables as they are (thread.s relies on that)
+	uint32_t esp0;
 	uint32_t tid;
 	uint8_t state;
 };
 typedef struct thread thread_t;
 
-thread_t* init_threading();
+thread_t* init_threading(uint32_t esp0);
 
 uint32_t* allocate_stack(uint32_t size);
 

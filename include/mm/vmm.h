@@ -10,6 +10,8 @@
 #define PGDIR_IDX_ADDR(x) ((uint32_t)((x)>>22)) // (x>>12)/1024
 #define PGTAB_IDX_ADDR(x) ((uint32_t)(((x)>>12)&0x3FF)) // (x>>12)%1024
 
+#define VTAB_IDX_ADDR(x) ((uint32_t)((x)>>12))
+
 #define PAGE_SIZE 0x1000
 
 #define PAGE_PRESENT 0x1
@@ -24,7 +26,7 @@ struct page_directory {
 	// these are VIRTUAL pointers (to virtual or physical addresses however)
 	uint32_t* directory_virtual; // virtual pointer to directory (page tables)
 	// ^ (by definition table of physical locations of pagetables)
-	uint32_t** tables_virtual; // table of pointers to pagetables
+	//uint32_t** tables_virtual; // table of pointers to pagetables
 };
 typedef struct page_directory page_directory_t;
 
@@ -43,7 +45,7 @@ void unmap(uint32_t va);
 
 // Returns 1 if the given virtual address is mapped in the address space.
 // If "*pa" is non-NULL, the physical address of the mapping is placed in *pa.
-char get_mapping(uint32_t va, uint32_t* pa);
+uint8_t get_mapping(uint32_t va, uint32_t* pa);
 
 // Copies page directory returning it's virtual address and placing physical
 // addresses in proper variables.

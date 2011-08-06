@@ -6,10 +6,11 @@ uint32_t next_tid = 0;
 
 void thread_exit();
 
-thread_t* init_threading() {
+thread_t* init_threading(uint32_t esp0) {
 	current_thread = kmalloc_zero(sizeof(thread_t));
 	current_thread->tid = next_tid++;
 	current_thread->state = THREAD_RUNNING;
+	current_thread->esp0 = esp0;
 	return current_thread;
 }
 
@@ -22,6 +23,7 @@ thread_t* create_thread(int(*fn)(void*), void* arg, uint32_t* stack) {
 	thread_t* thread = kmalloc_zero(sizeof(thread_t));
 	thread->tid = next_tid++;
 	thread->state = THREAD_RUNNING;
+	thread->esp0 = (uint32_t) stack;
 
 	// __cdecl convetion
 	*--stack = (uint32_t) arg;

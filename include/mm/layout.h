@@ -12,7 +12,7 @@
 
 #define VIDEO_MEM				0x000B8000
 
-// from this point (0xD000000) starts kernel part of directory
+// from this point (0xD000000) starts kernel part of memory
 
 #define KHEAP_START				0xD0000000
 #define KHEAP_END				0xFD000000

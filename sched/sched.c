@@ -12,6 +12,10 @@ void init_scheduler(task_t* initial_task) {
 	threads = initial_task->threads;
 }
 
+void add_task(task_t* new_task) {
+	list_push_back(tasks, new_task);
+}
+
 // O(1) amortized, very unfair however...
 void schedule() {
 	if (!tasks)
