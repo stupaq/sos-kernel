@@ -11,7 +11,7 @@ uint32_t* tables_virtual = (uint32_t*) KERNEL_TABLES_VIRTUAL;
 
 // note that without identity mapping this variable won't be
 // valid anymore after enabling paging
-static page_directory_t __directory;
+static page_directory_t kernel_directory;
 
 void page_fault(registers_t *regs);
 
@@ -24,10 +24,9 @@ void init_vmm() {
 	// to obtain addresses must be and'ed with PAGE_MASK
 
 	// prepare kernel page directory
-	__directory.directory_physical = (uint32_t) (pmm_alloc_page() | PAGE_PRESENT
-			| PAGE_WRITE);
-	uint32_t* dir_ptr = (uint32_t*) (PAGE_ADDR_MASK
-			& __directory.directory_physical);
+	uint32_t* dir_ptr = (uint32_t*) pmm_alloc_page();
+	kernel_directory.directory_physical = (uint32_t) dir_ptr | PAGE_PRESENT
+			| PAGE_WRITE;
 	memset(dir_ptr, 0, PAGE_SIZE);
 
 	// identity mapping for first 4 MB
@@ -48,20 +47,20 @@ void init_vmm() {
 	tab_ptr[idx_tab] = (uint32_t) dir_ptr | PAGE_PRESENT | PAGE_WRITE;
 
 	// last table of page directory points to directory itself
-	// NOTE: after that there is no need of tables_virtual, as they are
-	// accessible like square table starting at KERNEL_TABLES_VIRTUAL
+	// NOTE: after that there is no need of tables_virtual in page directort,
+	// as they are accessible like square table starting at KERNEL_TABLES_VIRTUAL
 	dir_ptr[PGDIR_IDX_ADDR(KERNEL_TABLES_VIRTUAL)] = (uint32_t) dir_ptr
 			| PAGE_PRESENT | PAGE_WRITE;
 
 	// set the current directory
-	switch_page_directory(&__directory);
+	switch_page_directory(&kernel_directory);
 
 	// enable paging
 	asm volatile("mov %%cr0, %%eax;\
 			orl $0x80000000, %%eax;\
 			mov %%eax, %%cr0;"::);
 
-	if (&__directory != current_directory)
+	if (&kernel_directory != current_directory)
 		panic("VMM: God doesn't exist.");
 	// NOTE: from that point better not use __directory -- just in case
 
@@ -75,24 +74,15 @@ void init_vmm() {
 			| PAGE_PRESENT | PAGE_WRITE;
 	memset(tab_ptr, 0, PAGE_SIZE);
 
-	// wtf with those flags, not here - it's simple data
-	// set up tables_virtual (rewrite mm/layout.h into an array)
-	/* unnecessary since kernel knows everything about page tables (mapping)
-	 current_directory->tables_virtual =
-	 (uint32_t**) pmm_alloc_page();
-	 for (int i = 0; i < 1024; i++)
-	 current_directory->tables_virtual[i] =
-	 (uint32_t*) (KERNEL_TABLES_VIRTUAL + i * PAGE_SIZE);
-	 */
-
 	// NOTE: remember that every entry in directory and tables have flags,
 	// to obtain addresses must be and'ed with PAGE_MASK
+
 	// paging active
 	pmm_paging_active = 1;
 }
 
 void switch_page_directory(page_directory_t* dir) {
-	current_directory = dir; // thats ok
+	current_directory = dir;
 	asm volatile("mov %0, %%cr3" : : "r" (dir->directory_physical));
 }
 
@@ -102,7 +92,6 @@ void map(uint32_t va, uint32_t pa, uint32_t flags) {
 	// find appropriate pagetable for va
 	if (current_directory->directory_virtual[idx_dir] == 0) {
 		// create pagetable holding this page
-		// TODO: this code need to be revised
 		// update current directory
 		current_directory->directory_virtual[idx_dir] = pmm_alloc_page()
 				| PAGE_PRESENT | PAGE_WRITE;
@@ -141,14 +130,11 @@ uint8_t get_mapping(uint32_t va, uint32_t* pa) {
 
 extern void copy_page_physical(uint32_t* dest, uint32_t* src);
 
-// TODO: do we have to update __directory too?
 static uint32_t* clone_table(uint32_t* src, uint32_t* phys) {
-	uint32_t* dest = (uint32_t*) pmalloc(phys);
-	memset(dest, 0, PAGE_SIZE);
+	uint32_t* dest = (uint32_t*) pmalloc_zero(phys);
 	for (int i = 0; i < 1024; i++) {
 		if (src[i] == 0)
 			continue;
-		// TODO: or pmalloc?
 		dest[i] = pmm_alloc_page();
 		copy_page_physical((uint32_t*) dest[i],
 				(uint32_t*) (PAGE_ADDR_MASK & src[i]));
@@ -157,15 +143,15 @@ static uint32_t* clone_table(uint32_t* src, uint32_t* phys) {
 	return dest;
 }
 
-// TODO: do we have to update __directory too?
 page_directory_t* clone_directory(page_directory_t* src) {
 	page_directory_t* dest = kmalloc(sizeof(page_directory_t));
-	dest->directory_virtual = (uint32_t*) pmalloc(&(dest->directory_physical));
-	memset(dest->directory_virtual, 0, PAGE_SIZE);
+	dest->directory_virtual = (uint32_t*) pmalloc_zero(
+			&(dest->directory_physical));
 	for (int i = 0; i < 1024; i++) {
 		if (src->directory_virtual[i] == 0)
 			continue;
-		if (src->directory_virtual[i] == __directory.directory_virtual[i]) {
+		if (src->directory_virtual[i]
+				== kernel_directory.directory_virtual[i]) {
 			dest->directory_virtual[i] = src->directory_virtual[i];
 		} else {
 			uint32_t phys;
@@ -174,6 +160,12 @@ page_directory_t* clone_directory(page_directory_t* src) {
 					| PAGE_USER;
 		}
 	}
+	// IMPORTANT: make mapping for page tables (assign directory
+	// to last directory entry)
+	dest->directory_virtual[PGDIR_IDX_ADDR(KERNEL_TABLES_VIRTUAL)] =
+			(uint32_t) dest->directory_virtual | PAGE_PRESENT | PAGE_WRITE;
+	// NOTE: now when do switch_page_directory(dest)
+	// page tables will be accessible at tables_virtual
 	return dest;
 }
 

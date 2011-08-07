@@ -26,7 +26,6 @@ struct page_directory {
 	// these are VIRTUAL pointers (to virtual or physical addresses however)
 	uint32_t* directory_virtual; // virtual pointer to directory (page tables)
 	// ^ (by definition table of physical locations of pagetables)
-	//uint32_t** tables_virtual; // table of pointers to pagetables
 };
 typedef struct page_directory page_directory_t;
 
