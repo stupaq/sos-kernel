@@ -7,6 +7,8 @@ extern uint8_t pmm_paging_active;
 
 page_directory_t* current_directory;
 
+// NOTE: This verion of VMM is very bloated, were going to cut this off.
+
 // note that without identity mapping this variable won't be
 // valid anymore after enabling paging
 static page_directory_t kernel_directory;
