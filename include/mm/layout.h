@@ -12,17 +12,24 @@
 
 #define VIDEO_MEM				0x000B8000
 
-// from this point (0xD000000) starts kernel part of memory
+#define USER_DIR_VIRTUAL		0xEFBFF000
+#define USER_TABLES_VIRTUAL		0xEFC00000
 
-#define KHEAP_START				0xD0000000
+// from this point (KERNEL_ADDRESS_SPACE) starts kernel part of memory
+#define KERNEL_ADDRESS_SPACE	0xF0000000
+
+#define KHEAP_START				0xF0000000
 #define KHEAP_END				0xFD000000
 
-#define PHEAP_START				0xFD000000
-#define PHEAP_END				0xFF000000
+#define MOUNT_TABS_START		0xFD000000
+#define MOUNT_TABS_END			0xFF000000
 
 // no effect (and currently kernel resides in low mem)
 #define KERNEL_HIGHMEM			0xFF000000
-#define KERNEL_HIGHMEM_LIMIT	0xFF7FF000
+#define KERNEL_HIGHMEM_LIMIT	0xFF7FB000
+
+#define MOUNT_DIR_START			0xFF7FB000
+#define MOUNT_DIR_END			0xFF7FF000
 
 #define PMM_STACK_START			0xFF7FF000
 #define PMM_STACK_END			0xFFBFF000

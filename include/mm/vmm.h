@@ -13,20 +13,26 @@
 #define PAGE_ADDR_MASK 0xFFFFF000
 #define PAGE_FLAGS_MASK 0xFFF
 
-#define PGDIR_IDX_PAGE(x) ((uint32_t)(x)/1024)
-#define PGTAB_IDX_PAGE(x) ((uint32_t)(x)&0x3FF)
+#define PG_NUM_FROM_ADDR(x) ((uint32_t)(x)>>12)
+#define PG_FIRST_DIR_FROM_ADDR(x) ((uint32_t)((x)>>22)<<10)
+#define PGDIR_IDX_FROM_ADDR(x) ((uint32_t)(x)>>22)
+#define PGTAB_IDX_FROM_ADDR(x) (((uint32_t)(x)>>12)&0x3FF)
+#define PG_OFFSET_FROM_ADDR(x) ((uint32_t)(x) & PAGE_FLAGS_MASK)
 
-#define PGDIR_IDX_ADDR(x) ((uint32_t)((x)>>22)) // (x>>12)/1024
-#define PGTAB_IDX_ADDR(x) ((uint32_t)(((x)>>12)&0x3FF)) // (x>>12)%1024
+#define NOT_PAGE_ALIGNED(va) PG_OFFSET_FROM_ADDR(va)
+#define NOT_DIR_ENTRY_ALIGNED(va) (PGTAB_IDX_FROM_ADDR(va))
 
-#define VTAB_IDX_ADDR(x) ((uint32_t)((x)>>12))
+struct page_directory_mount {
+	uint32_t* directory;
+	uint32_t* pages; // linear, page-aligned address space
+};
+typedef struct page_directory_mount page_directory_mount_t;
 
 struct page_directory {
-	uint32_t directory_physical; // physical address of tables_physical (cr3)
-	// these are VIRTUAL pointers (to virtual or physical addresses however)
-	uint32_t* directory_virtual; // virtual pointer to directory (page tables)
-	// ^ (by definition table of physical locations of pagetables)
-	uint32_t** tables_virtual; // table of pointers to pagetables
+	uint32_t physical; // physical address of page tables (cr3)
+	// stores mount point of page directory in this directory
+	uint32_t* directory;
+	uint32_t* pages;
 };
 typedef struct page_directory page_directory_t;
 

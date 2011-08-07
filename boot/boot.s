@@ -37,6 +37,6 @@ start:
     call kmain
 
 section .bss
-    resb 32768			; stack size (32kB)
+    resb 131072			; stack size
 
 stack:

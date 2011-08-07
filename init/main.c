@@ -8,7 +8,6 @@
 #include <sched/thread.h>
 #include <mm/pmm.h>
 #include <mm/vmm.h>
-#include <mm/pheap.h>
 #include <fs/initrd.h>
 #include <fs/fs.h>
 #include <monitor.h>
@@ -17,6 +16,7 @@ extern uint32_t code, end; // defined by linker
 extern elf_t kernel_elf; // for print stack trace;
 
 extern void cpu_idle();
+extern page_directory_t* current_directory;
 
 // threading testing shit
 #include <lock.h>
@@ -60,8 +60,6 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 
 	// now we can use both kheap and pheap
 	init_kheap();
-	// after kheap init!
-	init_pheap();
 
 	// some debug
 	kprintf("kernel between 0x%.8x 0x%.8x mboot 0x%.8x\n", &code, &end,
@@ -90,14 +88,23 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 	// enable interrupts
 	asm volatile("sti");
 
+	// enable multitasking and multithreading
 	thread_t* kernel_thread = init_threading(kstack_addr);
 	task_t* kernel_task = init_tasking(kernel_thread);
 	init_scheduler(kernel_task);
 
+	// init keyboard
 	init_keyboard_driver();
 
 	kprintf("kernel mode completed\n");
 
+	// testing page directories mangling
+	page_directory_t* pd = clone_directory(current_directory);
+	kprintf("page directory cloned\n");
+	destroy_directory(pd);
+	kprintf("page directory destroyed\n");
+
+	// testing threading
 	add_thread(kernel_task, create_thread(&fake_thread, "thread1", allocate_stack(0x1000)));
 	add_thread(kernel_task, create_thread(&fake_thread, "thread2", allocate_stack(0x1000)));
 
