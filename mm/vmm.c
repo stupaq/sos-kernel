@@ -7,8 +7,6 @@ extern uint8_t pmm_paging_active;
 
 page_directory_t* current_directory;
 
-uint32_t* tables_virtual = (uint32_t*) KERNEL_TABLES_VIRTUAL;
-
 // note that without identity mapping this variable won't be
 // valid anymore after enabling paging
 static page_directory_t kernel_directory;
@@ -74,6 +72,13 @@ void init_vmm() {
 			| PAGE_PRESENT | PAGE_WRITE;
 	memset(tab_ptr, 0, PAGE_SIZE);
 
+	// we have already set this mapping by assigning page directory
+	// as the last page table
+	current_directory->tables_virtual = (uint32_t**) pmm_alloc_page();
+	for (int i = 0; i < 1024; i++)
+		current_directory->tables_virtual[i] =
+				(uint32_t*) (KERNEL_TABLES_VIRTUAL + i * PAGE_SIZE);
+
 	// NOTE: remember that every entry in directory and tables have flags,
 	// to obtain addresses must be and'ed with PAGE_MASK
 
@@ -88,6 +93,7 @@ void switch_page_directory(page_directory_t* dir) {
 
 void map(uint32_t va, uint32_t pa, uint32_t flags) {
 	uint32_t idx_dir = PGDIR_IDX_ADDR(va);
+	uint32_t idx_tab = PGTAB_IDX_ADDR(va);
 
 	// find appropriate pagetable for va
 	if (current_directory->directory_virtual[idx_dir] == 0) {
@@ -97,17 +103,21 @@ void map(uint32_t va, uint32_t pa, uint32_t flags) {
 				| PAGE_PRESENT | PAGE_WRITE;
 		// NEVER update kernel directory -- could screw up things
 		// init page table
-		memset((void*) tables_virtual[idx_dir * 1024], 0, 0x1000);
+		memset((void*) current_directory->tables_virtual[idx_dir], 0,
+				0x1000);
 	}
 
 	// NOTE: tables_virtual seems to be common over all page directories
 	// page table exists, now update flags and pa
-	tables_virtual[VTAB_IDX_ADDR(va)] = (pa & PAGE_ADDR_MASK) | flags;
+	current_directory->tables_virtual[idx_dir][idx_tab] = (pa & PAGE_ADDR_MASK)
+			| flags;
 }
 
 void unmap(uint32_t va) {
+	uint32_t idx_dir = PGDIR_IDX_ADDR(va);
+	uint32_t idx_tab = PGTAB_IDX_ADDR(va);
 	// update current directory
-	tables_virtual[VTAB_IDX_ADDR(va)] = 0;
+	current_directory->tables_virtual[idx_dir][idx_tab] = 0;
 	// NEVER update kernel directory -- could screw up things
 	// invalidate page mapping
 	asm volatile("invlpg (%0)" : : "a" (va));
@@ -115,13 +125,14 @@ void unmap(uint32_t va) {
 
 uint8_t get_mapping(uint32_t va, uint32_t* pa) {
 	uint32_t idx_dir = PGDIR_IDX_ADDR(va);
+	uint32_t idx_tab = PGTAB_IDX_ADDR(va);
 	// Find the appropriate page table for 'va'.
 	if (current_directory->directory_virtual[idx_dir] == 0)
 		return 0;
-	if (tables_virtual[VTAB_IDX_ADDR(va)] != 0) {
+	if (current_directory->tables_virtual[idx_dir][idx_tab] != 0) {
 		if (pa)
-			*pa = (tables_virtual[VTAB_IDX_ADDR(va)] & PAGE_ADDR_MASK)
-					+ (va & PAGE_FLAGS_MASK);
+			*pa = (current_directory->tables_virtual[idx_dir][idx_tab]
+					& PAGE_ADDR_MASK) + (va & PAGE_FLAGS_MASK);
 		// NOTE: now it returns physical addres of variable itself, not frame
 		return 1;
 	}
@@ -147,17 +158,21 @@ page_directory_t* clone_directory(page_directory_t* src) {
 	page_directory_t* dest = kmalloc(sizeof(page_directory_t));
 	dest->directory_virtual = (uint32_t*) pmalloc_zero(
 			&(dest->directory_physical));
+	dest->tables_virtual = kmalloc_zero(sizeof(uint32_t) * 1024);
 	for (int i = 0; i < 1024; i++) {
 		if (src->directory_virtual[i] == 0)
 			continue;
 		if (src->directory_virtual[i]
 				== kernel_directory.directory_virtual[i]) {
 			dest->directory_virtual[i] = src->directory_virtual[i];
+			dest->tables_virtual[i] = src->tables_virtual[i];
 		} else {
 			uint32_t phys;
-			clone_table((uint32_t*) tables_virtual[i], &phys);
+			dest->tables_virtual[i] = clone_table(src->tables_virtual[i],
+					&phys);
 			dest->directory_virtual[i] = phys | PAGE_PRESENT | PAGE_WRITE
 					| PAGE_USER;
+			clone_table(dest->tables_virtual[i], src->tables_virtual[i]);
 		}
 	}
 	// IMPORTANT: make mapping for page tables (assign directory
@@ -169,9 +184,29 @@ page_directory_t* clone_directory(page_directory_t* src) {
 	return dest;
 }
 
-// TODO: do we have to update __directory too?
+void delete_table(uint32_t* tab) {
+	for (int i = 0; i < 1024; i++) {
+		if (tab[i] == 0)
+			continue;
+		pmm_free_page(tab[i] & PAGE_ADDR_MASK);
+	}
+	pfree(tab);
+}
+
 void destroy_directory(page_directory_t* dir) {
-	// TODO
+	if (dir == &kernel_directory)
+		panic("VMM: deleting kernel (reference) directory.");
+	for (int i = 0; i < 1024; i++) {
+		if (dir->directory_virtual[i] == 0)
+			continue;
+		if (dir->directory_virtual[i]
+				!= kernel_directory.directory_virtual[i]) {
+			delete_table(dir->tables_virtual[i]);
+		}
+	}
+	kfree(dir->tables_virtual);
+	pfree(dir->directory_virtual);
+	kfree(dir);
 }
 
 void page_fault(registers_t *regs) {

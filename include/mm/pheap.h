@@ -15,6 +15,6 @@ void* pmalloc(uint32_t* phys);
 
 void* pmalloc_zero(uint32_t* phys);
 
-void pfree(uint32_t virt);
+void pfree(uint32_t va);
 
 #endif // PHEAP_H
