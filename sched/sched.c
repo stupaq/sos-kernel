@@ -48,7 +48,6 @@ void schedule() {
 			if (new_task != current_task) {
 				// change address space (page directory)
 				switch_page_directory(new_task->page_directory);
-				kprintf("process: %d\n", new_task->pid);
 				// below must by done! either by c or asm code
 				current_task = new_task;
 			}
@@ -60,6 +59,8 @@ void schedule() {
 		case THREAD_DYING:
 			destroy_thread(new_thread);
 			list_remove(threads);
+			new_thread = 0;
+			break;
 		case THREAD_WAITING:
 			new_thread = 0;
 			break;
@@ -73,6 +74,6 @@ void schedule() {
 	// switch thread if needed
 	if (new_thread != current_thread) {
 		switch_thread(new_thread);
-		// current_thread = new_thread; // switch_task does that
+		// current_thread = new_thread; // switch_thread does that
 	}
 }

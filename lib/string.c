@@ -9,7 +9,7 @@ void* memcpy(void* dest, const void* src, uint32_t len) {
 	return dest;
 }
 
-void* memset(void* dest, uint8_t val, uint32_t len) {
+void* memset(void* dest, int val, uint32_t len) {
 	uint8_t* ptr = (uint8_t*) dest;
 	for (; len != 0; len--)
 		*ptr++ = val;

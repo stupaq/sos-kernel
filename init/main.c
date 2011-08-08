@@ -1,5 +1,4 @@
-#include <multiboot.h>
-#include <common.h>
+#include <boot/multiboot.h>
 #include <kernel/gdt.h>
 #include <kernel/idt.h>
 #include <kernel/timer.h>
@@ -10,6 +9,7 @@
 #include <mm/vmm.h>
 #include <fs/initrd.h>
 #include <fs/fs.h>
+#include <common.h>
 #include <monitor.h>
 
 extern uint32_t code, end; // defined by linker
@@ -24,11 +24,13 @@ spinlock_t lock = SPINLOCK_UNLOCKED;
 int fake_thread(void* arg) {
 	for (;;) {
 		spinlock_lock(&lock);
-		kprintf("entering %s\n", arg);
-		for (int i = 0; i < 5000000; i++)
+		kprintf(">>> %s\n", arg);
+		for (int i = 0; i < 1000000; i++)
 			;
-		kprintf("leaving %s\n", arg);
+		kprintf("%s >>>\n", arg);
 		spinlock_unlock(&lock);
+		for (int i = 0; i < 1000000; i++)
+			;
 	}
 	return 666;
 }
@@ -105,10 +107,19 @@ int kmain(multiboot_info_elf_t* mboot_ptr, uint32_t kstack_addr) {
 	kprintf("page directory destroyed\n");
 
 	// testing threading
-	add_thread(kernel_task, create_thread(&fake_thread, "thread1", allocate_stack(0x1000)));
-	add_thread(kernel_task, create_thread(&fake_thread, "thread2", allocate_stack(0x1000)));
+	add_thread(kernel_task,
+			create_thread(&fake_thread, "thread1", allocate_stack(0x1000)));
+	add_thread(kernel_task,
+			create_thread(&fake_thread, "thread2", allocate_stack(0x1000)));
 
-	for(;;)
+	// testing tasking
+	add_task(
+			create_task(
+					create_thread(&fake_thread, "thread3",
+							allocate_stack(0x1000)),
+					clone_directory(current_directory)));
+
+	for (;;)
 		monitor_put(keyboard_getchar());
 
 	cpu_idle();
