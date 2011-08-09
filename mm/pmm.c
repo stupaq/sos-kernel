@@ -57,7 +57,7 @@ void pmm_free_page(uint32_t p) {
 	}
 }
 
-void pmm_collect_pages(multiboot_info_elf_t* mboot_ptr) {
+void pmm_collect_pages(multiboot_info_t* mboot_ptr) {
 	uint32_t i = mboot_ptr->mmap_addr;
 	// debug
 	kprintf("ignore pages before: 0x%.8x\nusable ram:\n", pmm_location);

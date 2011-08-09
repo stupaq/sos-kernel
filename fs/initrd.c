@@ -8,7 +8,6 @@ initrd_file_header_t* file_headers;
 fs_node_t* initrd_root; // initrd_root (will become /)
 fs_node_t* initrd_dev; // directory node for /dev
 fs_node_t* root_nodes;
-// TODO: changed to unsigned
 uint32_t nroot_nodes;
 
 struct dirent dirent;

@@ -1,33 +1,38 @@
 #include <kernel/elf.h>
 
-elf_t elf_from_multiboot(multiboot_info_elf_t* mb) {
-	elf_t elf;
-	elf_section_header_t *sh = (elf_section_header_t*) mb->addr;
+// NOTE: these functions are declared in elf-fn.h
 
-	uint32_t shstrtab = sh[mb->shndx].addr;
-	for (uint32_t i = 0; i < mb->num; i++) {
-		const char *name = (const char *) (shstrtab + sh[i].name);
+Elf32_Sym_Map elf_sym_map_from_multiboot(
+		multiboot_elf_section_header_table_t* elf_sec) {
+	Elf32_Sym_Map elf;
+	Elf32_Shdr* sh = (Elf32_Shdr*) elf_sec->addr;
+
+	uint32_t shstrtab = sh[elf_sec->shndx].sh_addr;
+	for (uint32_t i = 0; i < elf_sec->num; i++) {
+		const char *name = (const char *) (shstrtab + sh[i].sh_name);
 		if (!strcmp(name, ".strtab")) {
-			elf.strtab = (const char *) sh[i].addr;
-			elf.strtabsz = sh[i].size;
+			elf.strtab = (const char *) sh[i].sh_addr;
+			elf.strtabsz = sh[i].sh_size;
 		}
 		if (!strcmp(name, ".symtab")) {
-			elf.symtab = (elf_symbol_t*) sh[i].addr;
-			elf.symtabsz = sh[i].size;
+			elf.symtab = (Elf32_Sym*) sh[i].sh_addr;
+			elf.symtabsz = sh[i].sh_size;
 		}
 	}
 	return elf;
 }
 
-const char* elf_lookup_symbol(uint32_t addr, elf_t *elf) {
-	for (uint32_t i = 0; i < (elf->symtabsz / sizeof(elf_symbol_t)); i++) {
-		if (ELF32_ST_TYPE(elf->symtab[i].info) != 0x2)
+const char* elf_sym_map_lookup(uint32_t addr, Elf32_Sym_Map *elf_sym) {
+	for (uint32_t i = 0; i < (elf_sym->symtabsz / sizeof(Elf32_Sym)); i++) {
+		if (ELF32_ST_TYPE(elf_sym->symtab[i].st_info) != 0x2)
 			continue;
 
-		if ((addr >= elf->symtab[i].value)
-				&& (addr < (elf->symtab[i].value + elf->symtab[i].size))) {
-			const char *name = (const char *) ((uint32_t) elf->strtab
-					+ elf->symtab[i].name);
+		if ((addr >= elf_sym->symtab[i].st_value)
+				&& (addr
+						< (elf_sym->symtab[i].st_value
+								+ elf_sym->symtab[i].st_size))) {
+			const char *name = (const char *) ((uint32_t) elf_sym->strtab
+					+ elf_sym->symtab[i].st_name);
 			return name;
 		}
 	}

@@ -31,12 +31,13 @@ extern kmain
 
 start:
     mov esp, stack		; set up stack
-    push esp			; push a pointer to kernel stack
+    push stack_bottom	; push a pointer to kernel stack bottom
+    push esp			; push a pointer to kernel stack (top)
     push ebx			; push a pointer to the multiboot info structure
     mov ebp, 0			; ebp=0 here we terminate stack traces
     call kmain
 
 section .bss
+stack_bottom:
     resb 131072			; stack size
-
 stack:

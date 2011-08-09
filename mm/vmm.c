@@ -30,11 +30,15 @@ void init_vmm() {
 	memset(dir_ptr, 0, PAGE_SIZE);
 	kernel_directory.physical = (uint32_t) dir_ptr;
 
+	// TODO: migrate with whole kernel to HIGH_MEM
+	// (to set up in this mapping)
+
 	// identity mapping for first 4 MB
 	uint32_t* tab_ptr = (uint32_t*) pmm_alloc_page();
+	memset(tab_ptr, 0, PAGE_SIZE);
 	dir_ptr[0] = (uint32_t) tab_ptr | PAGE_PRESENT | PAGE_WRITE;
 	// you do KNOW what those tab_ptr's stands for
-	for (uint32_t i = 0; i < 1024; i++)
+	for (uint32_t i = 0; i < PG_NUM_FROM_ADDR(LOWMEM_ID_MAP_END); i++)
 		tab_ptr[i] = i * 0x1000 | PAGE_PRESENT | PAGE_WRITE;
 
 	// MOUNTING KERNEL DIRECTORY
@@ -58,6 +62,9 @@ void init_vmm() {
 	// as kernel directory was mounted we can fill mountpoint info
 	kernel_directory.directory = (uint32_t*) KERNEL_DIR_VIRTUAL;
 	kernel_directory.pages = (uint32_t*) KERNEL_TABLES_VIRTUAL;
+
+	// TODO: prepare tage tables for whole kernel address space to avoid
+	// faults on switching to kernel in long ago copied directories
 
 	// set the current directory
 	switch_page_directory(&kernel_directory);

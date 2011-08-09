@@ -11,6 +11,6 @@ uint32_t pmm_alloc_page();
 
 void pmm_free_page(uint32_t p);
 
-void pmm_collect_pages(multiboot_info_elf_t* mboot_ptr);
+void pmm_collect_pages(multiboot_info_t* mboot_ptr);
 
 #endif

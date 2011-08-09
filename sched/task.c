@@ -4,10 +4,12 @@
 task_t* current_task = 0;
 uint32_t next_pid = 0;
 
+task_t* kernel_task = 0;
+
 extern page_directory_t* current_directory;
 
 task_t* init_tasking(thread_t* init_thread) {
-	current_task = create_task(init_thread, current_directory);
+	current_task = kernel_task = create_task(init_thread, current_directory);
 	return current_task;
 }
 
@@ -29,6 +31,6 @@ void destroy_task(task_t* task) {
 	kfree(task);
 }
 
-void add_thread(task_t* task, thread_t* thread) {
+void task_add_thread(task_t* task, thread_t* thread) {
 	list_push_back(task->threads, (uint32_t*) thread);
 }
