@@ -16,10 +16,10 @@ struct fs_node;
 // each node have these callbacks (TODO: change to driver pointer interface)
 typedef uint32_t (*read_type_t)(struct fs_node*, uint32_t, uint32_t, uint8_t*);
 typedef uint32_t (*write_type_t)(struct fs_node*, uint32_t, uint32_t, uint8_t*);
-typedef void (*open_type_t)(struct fs_node*);
+typedef void (*open_type_t)(struct fs_node*, uint8_t read, uint8_t write);
 typedef void (*close_type_t)(struct fs_node*);
 typedef struct dirent* (*readdir_type_t)(struct fs_node*, uint32_t);
-typedef struct fs_node* (*finddir_type_t)(struct fs_node*, char* name);
+typedef struct fs_node* (*finddir_type_t)(struct fs_node*, const char* name);
 
 typedef struct fs_node {
 	char name[128];
@@ -52,6 +52,6 @@ uint32_t write(fs_node_t* node, uint32_t offset, uint32_t size, uint8_t* buffer)
 void open(fs_node_t* node, uint8_t read, uint8_t write);
 void close(fs_node_t* node);
 struct dirent* readdir(fs_node_t* node, uint32_t index);
-fs_node_t* finddir(fs_node_t* node, char* name);
+fs_node_t* finddir(fs_node_t* node, const char* name);
 
 #endif

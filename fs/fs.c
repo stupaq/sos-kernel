@@ -21,7 +21,7 @@ uint32_t write(fs_node_t* node, uint32_t offset, uint32_t size, uint8_t* buffer)
 void open(fs_node_t* node, uint8_t read, uint8_t write) {
 	// Has the node got an open callback?
 	if (node->open != 0)
-		node->open(node);
+		node->open(node, read, write);
 }
 
 void close(fs_node_t* node) {
@@ -38,7 +38,7 @@ struct dirent* readdir(fs_node_t* node, uint32_t index) {
 		return 0;
 }
 
-fs_node_t* finddir(fs_node_t* node, char* name) {
+fs_node_t* finddir(fs_node_t* node, const char* name) {
 	// Is the node a directory, and does it have a callback?
 	if ((node->flags & 0x7) == FS_DIRECTORY && node->finddir != 0)
 		return node->finddir(node, name);

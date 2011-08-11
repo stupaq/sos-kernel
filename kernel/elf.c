@@ -1,6 +1,31 @@
 #include <kernel/elf.h>
+#include <mm/vmm.h>
+#include <string.h>
 
 // NOTE: these functions are declared in elf-fn.h
+
+uint32_t load_elf_binary(fs_node_t* file) {
+	// read header
+	Elf32_Ehdr elf_hdr;
+	read(file, 0, sizeof(Elf32_Ehdr), (void*) &elf_hdr);
+
+	// do some checkings
+	if (memcmp(elf_hdr.e_ident, ELFMAG, SELFMAG) != 0)
+		panic("ELF: This is not an elf file.");
+
+	Elf32_Phdr p_hdr;
+	for (uint32_t i = 0, off = elf_hdr.e_phoff; i < elf_hdr.e_phnum;
+			i++, off += sizeof(Elf32_Phdr)) {
+		read(file, off, sizeof(Elf32_Phdr), (void*) &p_hdr);
+		if (PF_X == p_hdr.p_type) {
+			allocate_range(p_hdr.p_vaddr, p_hdr.p_vaddr + p_hdr.p_memsz,
+					PAGE_WRITE | PAGE_USER);
+			read(file, p_hdr.p_offset, p_hdr.p_filesz, (void*) p_hdr.p_vaddr);
+		}
+	}
+
+	return elf_hdr.e_entry;
+}
 
 Elf32_Sym_Map elf_sym_map_from_multiboot(
 		multiboot_elf_section_header_table_t* elf_sec) {

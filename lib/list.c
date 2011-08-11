@@ -1,7 +1,5 @@
 #include <list.h>
 
-// iterative, one-way list with front guardian
-
 list_t* list_new() {
 	list_t* list = kmalloc(sizeof(list_t));
 	list->tail = list->head = list->prev = list_entry_new();
@@ -14,7 +12,7 @@ list_entry_t* list_entry_new() {
 
 void destroy_list(list_t* list) {
 	list_rewind(list);
-	while(!list_empty(list))
+	while (!list_empty(list))
 		list_remove(list);
 	// remove guardian
 	kfree(list->head);
@@ -63,7 +61,13 @@ void list_push_back(list_t* list, uint32_t* ptr) {
 void list_remove(list_t* list) {
 	list_entry_t* entry = list->prev->next;
 	if (entry) {
-		list->prev = entry->next;
+		if (list->tail == entry) {
+			if (entry->next)
+				list->tail = entry->next;
+			else
+				list->tail = list->prev;
+		}
+		list->prev->next = entry->next;
 		destroy_list_entry(entry);
 	}
 }

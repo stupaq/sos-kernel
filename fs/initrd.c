@@ -5,8 +5,8 @@
 // data of mounted initrd
 initrd_header_t* initrd_header;
 initrd_file_header_t* file_headers;
-fs_node_t* initrd_root; // initrd_root (will become /)
-fs_node_t* initrd_dev; // directory node for /dev
+fs_node_t* initrd_root;
+fs_node_t* initrd_dev;
 fs_node_t* root_nodes;
 uint32_t nroot_nodes;
 
@@ -38,7 +38,7 @@ static struct dirent* initrd_readdir(fs_node_t* node, uint32_t index) {
 	return &dirent;
 }
 
-static fs_node_t* initrd_finddir(fs_node_t* node, char* name) {
+static fs_node_t* initrd_finddir(fs_node_t* node, const char* name) {
 	if (node == initrd_root && !strcmp(name, "dev"))
 		return initrd_dev;
 	for (uint32_t i = 0; i < nroot_nodes; i++)
@@ -53,6 +53,7 @@ fs_node_t* init_initrd(uint32_t location) {
 
 	// initialise the root directory.
 	initrd_root = (fs_node_t*) kmalloc_zero(sizeof(fs_node_t));
+	memset(initrd_root, 0, sizeof(fs_node_t));
 	strcpy(initrd_root->name, "initrd");
 	initrd_root->flags = FS_DIRECTORY;
 	initrd_root->readdir = &initrd_readdir;
@@ -60,7 +61,7 @@ fs_node_t* init_initrd(uint32_t location) {
 
 	// initialise the /dev directory
 	initrd_dev = (fs_node_t*) kmalloc_zero(sizeof(fs_node_t));
-	// TODO there was: first assign name, then memset to zero all fs_node_to
+	memset(initrd_dev, 0, sizeof(fs_node_t));
 	strcpy(initrd_dev->name, "dev");
 	initrd_dev->flags = FS_DIRECTORY;
 	initrd_dev->readdir = &initrd_readdir;

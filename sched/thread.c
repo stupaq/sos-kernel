@@ -48,6 +48,7 @@ void destroy_thread(thread_t* thread) {
 
 void thread_exit() {
 	register uint32_t val asm("eax");
+	current_thread->state = THREAD_DYING;
 	kprintf("Thread exited with value %d\n", val);
 	for (;;)
 		;

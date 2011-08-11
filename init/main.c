@@ -111,17 +111,13 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 
 	kprintf("kernel mode completed\n");
 
-	// testing page directories mangling
-	page_directory_t* pd = clone_directory(current_directory);
-	kprintf("page directory cloned\n");
-	destroy_directory(pd);
-	kprintf("page directory destroyed\n");
-
 	// test threading
-	exec_thread(&fake_thread, "thread1");
-	exec_thread(&fake_thread, "thread2");
+	//exec_thread(&fake_thread, "thread1");
+	//exec_thread(&fake_thread, "thread2");
 
 	// test forking
+	exec_elf("init");
+	//exec_elf("init");
 
 	for (;;)
 		monitor_put(keyboard_getchar());

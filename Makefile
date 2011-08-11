@@ -8,10 +8,10 @@ AS=nasm
 LD=ld.bfd
 
 CFLAGS=-nostdlib -fno-builtin -m32 -Wall -Wextra -std=gnu99 -pedantic
-LDFLAGS=-melf_i386 -Tlink.ld
+LDFLAGS=-T kernel.ld
 ASFLAGS=-felf
 
-all: $(COBJECTS) $(SOBJECTS) link utils
+all: $(COBJECTS) $(SOBJECTS) link tools user
 
 clean:
 	@echo Removing object files
@@ -30,8 +30,11 @@ link:
 	@echo Compiling $<
 	@$(CC) $(CFLAGS) -o $@ -c $<
 
-utils:
-	@(cd ../utils; make)
+tools:
+	@(cd ../tools; make)
+
+user:
+	@(cd ../user; make)
 
 dep:
 	@echo Computing dependencies
@@ -48,20 +51,16 @@ fs.o: fs/fs.c include/fs/fs.h include/common.h include/kernel/panic.h \
  include/kernel/keyboard.h include/mm/kheap.h include/mm/pmm.h \
  include/boot/multiboot.h include/mm/layout.h include/kprintf.h \
  include/string.h
-lock.o: kernel/lock.c include/lock.h include/common.h \
+elf.o: kernel/elf.c include/kernel/elf.h include/common.h \
  include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
  include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \
- include/kprintf.h include/string.h
-panic.o: kernel/panic.c include/kernel/panic.h include/kernel/trace.h \
- include/kernel/elf.h include/boot/multiboot.h include/common.h \
- include/kernel/keyboard.h include/mm/kheap.h include/mm/pmm.h \
- include/mm/layout.h include/kprintf.h include/string.h \
- /usr/include/linux/types.h /usr/include/asm/types.h \
- /usr/include/asm-generic/types.h /usr/include/asm-generic/int-ll64.h \
- /usr/include/asm/bitsperlong.h /usr/include/asm-generic/bitsperlong.h \
- /usr/include/linux/posix_types.h /usr/include/linux/stddef.h \
- /usr/include/asm/posix_types.h /usr/include/asm/posix_types_32.h \
- /usr/include/linux/elf-em.h
+ include/kprintf.h include/string.h include/kernel/elf-fn.h \
+ include/fs/fs.h include/mm/vmm.h
+panic.o: kernel/panic.c include/kernel/panic.h include/kernel/elf.h \
+ include/common.h include/kernel/keyboard.h include/mm/kheap.h \
+ include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \
+ include/kprintf.h include/string.h include/kernel/elf-fn.h \
+ include/fs/fs.h
 keyboard.o: kernel/keyboard.c include/kernel/keyboard.h include/common.h \
  include/kernel/panic.h include/mm/kheap.h include/mm/pmm.h \
  include/boot/multiboot.h include/mm/layout.h include/kprintf.h \
@@ -74,16 +73,6 @@ gdt.o: kernel/gdt.c include/kernel/gdt.h include/common.h \
  include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
  include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \
  include/kprintf.h include/string.h
-trace.o: kernel/trace.c include/kernel/trace.h include/kernel/elf.h \
- include/boot/multiboot.h include/common.h include/kernel/panic.h \
- include/kernel/keyboard.h include/mm/kheap.h include/mm/pmm.h \
- include/mm/layout.h include/kprintf.h include/string.h \
- /usr/include/linux/types.h /usr/include/asm/types.h \
- /usr/include/asm-generic/types.h /usr/include/asm-generic/int-ll64.h \
- /usr/include/asm/bitsperlong.h /usr/include/asm-generic/bitsperlong.h \
- /usr/include/linux/posix_types.h /usr/include/linux/stddef.h \
- /usr/include/asm/posix_types.h /usr/include/asm/posix_types_32.h \
- /usr/include/linux/elf-em.h
 timer.o: kernel/timer.c include/kernel/timer.h include/common.h \
  include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
  include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \
@@ -102,6 +91,10 @@ pmm.o: mm/pmm.c include/mm/pmm.h include/boot/multiboot.h \
  include/common.h include/kernel/panic.h include/kernel/keyboard.h \
  include/mm/kheap.h include/kprintf.h include/string.h \
  include/mm/layout.h include/mm/vmm.h
+lock.o: lib/lock.c include/lock.h include/common.h include/kernel/panic.h \
+ include/kernel/keyboard.h include/mm/kheap.h include/mm/pmm.h \
+ include/boot/multiboot.h include/mm/layout.h include/kprintf.h \
+ include/string.h
 string.o: lib/string.c include/string.h include/common.h \
  include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
  include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \
@@ -132,15 +125,10 @@ main.o: init/main.c include/boot/multiboot.h include/common.h \
  include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
  include/mm/pmm.h include/mm/layout.h include/kprintf.h include/string.h \
  include/kernel/gdt.h include/kernel/idt.h include/kernel/timer.h \
- include/kernel/trace.h include/kernel/elf.h /usr/include/linux/types.h \
- /usr/include/asm/types.h /usr/include/asm-generic/types.h \
- /usr/include/asm-generic/int-ll64.h /usr/include/asm/bitsperlong.h \
- /usr/include/asm-generic/bitsperlong.h /usr/include/linux/posix_types.h \
- /usr/include/linux/stddef.h /usr/include/asm/posix_types.h \
- /usr/include/asm/posix_types_32.h /usr/include/linux/elf-em.h \
+ include/kernel/elf.h include/kernel/elf-fn.h include/fs/fs.h \
  include/sched/sched.h include/sched/thread.h include/sched/task.h \
  include/list.h include/mm/vmm.h include/sched/fork.h include/fs/initrd.h \
- include/fs/fs.h include/monitor.h include/lock.h
+ include/monitor.h include/lock.h
 sched.o: sched/sched.c include/sched/sched.h include/common.h \
  include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
  include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \
@@ -155,7 +143,8 @@ fork.o: sched/fork.c include/sched/fork.h include/common.h \
  include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \
  include/kprintf.h include/string.h include/sched/sched.h \
  include/sched/thread.h include/sched/task.h include/list.h \
- include/mm/vmm.h
+ include/mm/vmm.h include/fs/fs.h include/kernel/elf.h \
+ include/kernel/elf-fn.h
 task.o: sched/task.c include/sched/task.h include/common.h \
  include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
  include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \

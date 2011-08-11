@@ -3,6 +3,8 @@
 #include <sched/thread.h>
 #include <sched/task.h>
 #include <mm/vmm.h>
+#include <fs/fs.h>
+#include <kernel/elf.h>
 
 extern void save_thread_state(thread_t* thread);
 
@@ -13,7 +15,7 @@ extern uint32_t next_tid;
 
 extern page_directory_t* current_directory;
 
-int32_t fork() {
+int32_t fork_userspace() {
 	// NOTE: because of clonning policy forking from kernel will not work
 	// WARNING: even stack won't be copied!
 	if (current_task == kernel_task)
@@ -39,7 +41,7 @@ int32_t fork() {
 	// new stack (no in case when forking from kernel)
 
 	// add to run queue
-	add_task(new_task);
+	sched_add_task(new_task);
 
 	// after this will be entry point
 	save_thread_state(new_thread);
@@ -59,6 +61,45 @@ int32_t fork() {
 		// by convention return child's pid
 		return new_task->pid;
 	}
+}
+
+uint32_t exec_elf(const char* name) {
+	fs_node_t* file = finddir(fs_root, name);
+
+	// disable interrupts
+	asm volatile("cli");
+
+	// save directory and create one for new task
+	page_directory_t* old_dir = current_directory;
+	page_directory_t* new_dir = clone_directory(old_dir);
+
+	// switch to new directory (this is where we set up process)
+	switch_page_directory(new_dir);
+
+	// load elf and get entry point
+	uint32_t entry = load_elf_binary(file);
+
+	// setup stack
+	uint32_t stack = USER_STACK_TOP;
+	allocate_range(stack - THREAD_STACK_SIZE, stack, PAGE_WRITE | PAGE_USER);
+
+	// create scheduling structures
+	thread_t* new_thread = create_thread((int(*)(void*)) entry, 0,
+			(uint32_t*) stack, THREAD_STACK_SIZE);
+	task_t* new_task = create_task(new_thread, new_dir);
+	sched_add_task(new_task);
+
+	// switch back to parents directory
+	switch_page_directory(old_dir);
+
+	// cleanup
+	kfree(file);
+
+	// reenable interrupts
+	asm volatile("sti");
+
+	// like in fork return child pid
+	return new_task->pid;
 }
 
 uint32_t exec_thread(int(*fn)(void*), void* arg) {

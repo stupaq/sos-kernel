@@ -63,8 +63,10 @@ void init_vmm() {
 	kernel_directory.directory = (uint32_t*) KERNEL_DIR_VIRTUAL;
 	kernel_directory.pages = (uint32_t*) KERNEL_TABLES_VIRTUAL;
 
-	// TODO: prepare tage tables for whole kernel address space to avoid
+	// TODO: prepare tage tables for the rest of kernel address space to avoid
 	// faults on switching to kernel in long ago copied directories
+
+	// TODO: consider if this kernel mapping is necessary
 
 	// set the current directory
 	switch_page_directory(&kernel_directory);
@@ -95,6 +97,8 @@ void init_vmm() {
 }
 
 void switch_page_directory(page_directory_t* dir) {
+	if (current_directory != dir)
+		kprintf("switch dir: 0x%x\n", dir->physical);
 	current_directory = dir;
 	asm volatile("mov %0, %%cr3" : : "r" (dir->physical));
 }
@@ -102,6 +106,11 @@ void switch_page_directory(page_directory_t* dir) {
 void map(uint32_t va, uint32_t pa, uint32_t flags) {
 	uint32_t dir_entry = PGDIR_IDX_FROM_ADDR(va);
 	uint32_t page_num = PG_NUM_FROM_ADDR(va);
+
+	// NOTE: if we're mapping something in kernel from out of kernel
+	// we need to be careful not to fuck up
+	if (va >= KERNEL_ADDRESS_SPACE && current_directory != &kernel_directory)
+		kprintf("WARNING: kernel outdated\n");
 
 	// find appropriate pagetable for va
 	if (current_directory->directory[dir_entry] == 0) {
@@ -116,7 +125,8 @@ void map(uint32_t va, uint32_t pa, uint32_t flags) {
 
 	// NOTE: tables_virtual seems to be common over all page directories
 	// page table exists, now update flags and pa
-	current_directory->pages[page_num] = (pa & PAGE_ADDR_MASK) | flags;
+	current_directory->pages[page_num] = (pa & PAGE_ADDR_MASK) | PAGE_PRESENT
+			| flags;
 }
 
 void unmap(uint32_t va) {
@@ -144,6 +154,23 @@ uint8_t get_mapping(uint32_t va, uint32_t* pa) {
 		return 1;
 	}
 	return 0;
+}
+
+uint32_t allocate_range(uint32_t va_start, uint32_t va_end, uint32_t flags) {
+	va_start = PAGE_ROUND_DOWN(va_start);
+	va_end = PAGE_ROUND_UP(va_end);
+	// allocate and map
+	uint32_t pa;
+	for (uint32_t va = va_start; va < va_end; va += PAGE_SIZE) {
+		if (get_mapping(va, &pa)) {
+			// if exists update flags
+			map(va, pa, flags);
+		} else {
+			// if doesn't exists allocate
+			map(va, pmm_alloc_page(), flags);
+		}
+	}
+	return va_end;
 }
 
 static void find_mount_point(page_directory_mount_t* mount) {
@@ -280,9 +307,33 @@ void destroy_directory(page_directory_t* dir) {
 	kfree(dir);
 }
 
+void diff_directories(page_directory_t* adir, page_directory_t* bdir) {
+	page_directory_mount_t amp, bmp;
+	mount_directory(&amp, adir);
+	mount_directory(&bmp, bdir);
+	kprintf("start diff\n");
+	for (uint32_t pd = 0; pd < 1024; pd++) {
+		if (amp.directory[pd] != bmp.directory[pd]) {
+			kprintf("dir: %d\n", pd);
+		}
+		if (amp.directory[pd] && amp.directory[pd]) {
+			for (uint32_t pg = 0; pg < 1024; pg++) {
+				if (amp.pages[pg] != bmp.pages[pg]) {
+					kprintf("page: %d\n", pd * 1024 + pg);
+				}
+			}
+		}
+	}
+	kprintf("end diff\n");
+	umount_directory(&amp);
+	umount_directory(&bmp);
+}
+
 void page_fault(registers_t *regs) {
 	uint32_t cr2;
 	asm volatile("mov %%cr2, %0" : "=r" (cr2));
+	kprintf("Current directory: 0x%.8x %s\n", current_directory->physical,
+			(current_directory == &kernel_directory) ? "kernel" : "");
 	kprintf("Page fault: eip: 0x%x, faulting address: 0x%x\n", regs->eip, cr2);
 	kprintf("Error code: %x\n", regs->err_code);
 	panic("");

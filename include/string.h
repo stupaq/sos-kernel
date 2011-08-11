@@ -7,6 +7,8 @@ void* memcpy(void* dest, const void* src, uint32_t len);
 
 void* memset(void* dest, int val, uint32_t len);
 
+int8_t memcmp(const void* s1, const void* s2, uint32_t n);
+
 int strcmp(const char* str1, const char* str2);
 
 char* strcpy(char* dest, const char* src);

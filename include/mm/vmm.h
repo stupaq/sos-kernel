@@ -13,10 +13,13 @@
 #define PAGE_ADDR_MASK 0xFFFFF000
 #define PAGE_FLAGS_MASK 0xFFF
 
+#define PAGE_ROUND_DOWN(x) (((uint32_t)(x)) & PAGE_ADDR_MASK)
+#define PAGE_ROUND_UP(x) ((((uint32_t)(x))+PAGE_SIZE-1) & PAGE_ADDR_MASK)
+
 #define PG_NUM_FROM_ADDR(x) ((uint32_t)(x)>>12)
 #define PG_FIRST_DIR_FROM_ADDR(x) ((uint32_t)((x)>>22)<<10)
 #define PGDIR_IDX_FROM_ADDR(x) ((uint32_t)(x)>>22)
-#define PGTAB_IDX_FROM_ADDR(x) (((uint32_t)(x)>>12)&0x3FF)
+#define PGTAB_IDX_FROM_ADDR(x) (((uint32_t)(x)>>12) & 0x3FF)
 #define PG_OFFSET_FROM_ADDR(x) ((uint32_t)(x) & PAGE_FLAGS_MASK)
 
 #define NOT_PAGE_ALIGNED(va) PG_OFFSET_FROM_ADDR(va)
@@ -53,11 +56,16 @@ void unmap(uint32_t va);
 // If "*pa" is non-NULL, the physical address of the mapping is placed in *pa.
 uint8_t get_mapping(uint32_t va, uint32_t* pa);
 
+// guarantees that whole range from va_start to va_end excluding is mapped
+uint32_t allocate_range(uint32_t va_start, uint32_t va_end, uint32_t flags);
+
 // Copies page directory returning it's virtual address and placing physical
 // addresses in proper variables.
 page_directory_t* clone_directory(page_directory_t* src);
 
 // Deletes page directory freeing occupied memory
 void destroy_directory(page_directory_t* dir);
+
+void diff_directories(page_directory_t* adir, page_directory_t* bdir);
 
 #endif

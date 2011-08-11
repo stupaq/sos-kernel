@@ -10,16 +10,28 @@ void init_scheduler(task_t* initial_task) {
 	tasks = list_new();
 	list_push_back(tasks, (uint32_t*) initial_task);
 	threads = initial_task->threads;
+	list_next(threads);
 }
 
-void add_task(task_t* new_task) {
+void sched_add_task(task_t* new_task) {
 	list_push_back(tasks, (uint32_t*) new_task);
 }
+
+static uint32_t tick = 0;
 
 // O(1) amortized, very unfair however...
 void schedule() {
 	if (!tasks)
 		return;
+
+	tick++;
+	if (tick % 100)
+		return;
+
+	if (tick > 300 && current_task->pid > 0) {
+		kprintf("killing tid: 1.\n");
+		current_thread->state = THREAD_DYING;
+	}
 
 	thread_t* new_thread = 0;
 	do {
@@ -33,11 +45,16 @@ void schedule() {
 			// choose task
 			task_t* new_task = 0;
 			do {
+				// rewind if necessary
+				if (list_is_end(tasks))
+					list_rewind(tasks);
+				// pick task
 				new_task = (task_t*) list_current(tasks);
 				// if has no threads - remove
 				if (list_empty(new_task->threads)) {
-					destroy_task(new_task);
+					kprintf("delete pid: %d\n", new_thread->tid);
 					list_remove(tasks);
+					destroy_task(new_task);
 					new_task = 0;
 				} else
 					list_next(tasks);
@@ -57,8 +74,9 @@ void schedule() {
 		// remove thread if terminated
 		switch (new_thread->state) {
 		case THREAD_DYING:
-			destroy_thread(new_thread);
+			kprintf("delete tid: %d\n", new_thread->tid);
 			list_remove(threads);
+			destroy_thread(new_thread);
 			new_thread = 0;
 			break;
 		case THREAD_WAITING:
@@ -73,7 +91,9 @@ void schedule() {
 
 	// switch thread if needed
 	if (new_thread != current_thread) {
-		switch_thread(new_thread);
-		// current_thread = new_thread; // switch_thread does that
+		//switch_thread(new_thread);
+		// debug
+		current_thread = new_thread; // switch_thread does that
+		kprintf("pid: %d tid: %d\n\n", current_task->pid, current_thread->tid);
 	}
 }

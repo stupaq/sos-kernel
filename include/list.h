@@ -13,7 +13,6 @@ typedef struct list {
 	list_entry_t* prev;
 } list_t;
 
-
 list_t* list_new();
 
 list_entry_t* list_entry_new();
