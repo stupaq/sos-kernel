@@ -6,8 +6,6 @@
 #include <fs/fs.h>
 #include <kernel/elf.h>
 
-extern void save_thread_state(thread_t* thread);
-
 extern task_t* kernel_task;
 extern task_t* current_task;
 extern thread_t* current_thread;
@@ -16,10 +14,7 @@ extern uint32_t next_tid;
 extern page_directory_t* current_directory;
 
 int32_t fork_userspace() {
-	// NOTE: because of clonning policy forking from kernel will not work
-	// WARNING: even stack won't be copied!
-	if (current_task == kernel_task)
-		panic("FORK: Cannot fork from kernel task.");
+	panic("need to copy stack");
 
 	// TODO: change to kernel locking
 	asm volatile("cli");
@@ -79,18 +74,17 @@ uint32_t exec_elf(const char* name) {
 	// load elf and get entry point
 	uint32_t entry = load_elf_binary(file);
 
+	// switch back to parents directory
+	switch_page_directory(old_dir);
+
 	// setup stack
-	uint32_t stack = USER_STACK_TOP;
-	allocate_range(stack - THREAD_STACK_SIZE, stack, PAGE_WRITE | PAGE_USER);
+	uint32_t stack = (uint32_t) allocate_stack(THREAD_STACK_SIZE);
 
 	// create scheduling structures
 	thread_t* new_thread = create_thread((int(*)(void*)) entry, 0,
 			(uint32_t*) stack, THREAD_STACK_SIZE);
 	task_t* new_task = create_task(new_thread, new_dir);
 	sched_add_task(new_task);
-
-	// switch back to parents directory
-	switch_page_directory(old_dir);
 
 	// cleanup
 	kfree(file);

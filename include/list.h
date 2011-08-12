@@ -3,31 +3,24 @@
 
 #include <common.h>
 
-typedef struct list_entry {
-	uint32_t* entry;
-	struct list_entry* next;
-} list_entry_t;
-
 typedef struct list {
-	list_entry_t* head, *tail;
-	list_entry_t* prev;
+	uint32_t** elems;
+	uint32_t capacity, size, curr;
 } list_t;
 
 list_t* list_new();
 
-list_entry_t* list_entry_new();
-
 void destroy_list(list_t* list);
 
-void destroy_list_entry(list_entry_t* entry);
+uint8_t list_is_empty(list_t* list);
 
-uint8_t list_empty(list_t* list);
+uint32_t list_is_end(list_t* list);
 
 uint32_t* list_current(list_t* list);
 
 uint32_t* list_next(list_t* list);
 
-uint32_t list_is_end(list_t* list);
+uint32_t* list_cyc_next(list_t* list);
 
 void list_rewind(list_t* list);
 

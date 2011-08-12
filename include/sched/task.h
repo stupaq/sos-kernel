@@ -26,6 +26,4 @@ void destroy_task(task_t* task);
 
 void task_add_thread(task_t* task, thread_t* thread);
 
-void switch_task(task_t* next);
-
 #endif // TASK_H

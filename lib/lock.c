@@ -1,7 +1,7 @@
 #include <lock.h>
 
 static uint32_t atomic_test_and_set(volatile spinlock_t *lock) {
-	register spinlock_t value = SPINLOCK_LOCKED;
+	spinlock_t value = SPINLOCK_LOCKED;
 	asm volatile("lock xchgl %0, %1"
 			: "=q" (value), "=m" (*lock)
 			: "0" (value));

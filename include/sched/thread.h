@@ -31,4 +31,6 @@ void destroy_thread(thread_t* thread);
 
 void switch_thread(thread_t* next);
 
+void save_thread_state(thread_t* thread);
+
 #endif

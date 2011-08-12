@@ -13,8 +13,6 @@
 
 #define USER_TEXT_START			0x10000000	// defined in user.ld
 
-#define USER_STACK_TOP			0xE0001000
-
 #define USER_DIR_VIRTUAL		0xEFBFF000
 #define USER_TABLES_VIRTUAL		0xEFC00000
 

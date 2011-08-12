@@ -17,7 +17,6 @@ extern uint32_t code, end; // defined by linker
 extern Elf32_Sym_Map kernel_elf; // for print stack trace;
 
 extern void cpu_idle();
-extern page_directory_t* current_directory;
 
 // threading testing shit
 #include <lock.h>
@@ -101,15 +100,15 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 	// enable interrupts
 	asm volatile("sti");
 
+	// init keyboard
+	init_keyboard_driver();
+
+	kprintf("kernel ready\n");
+
 	// enable multitasking and multithreading
 	thread_t* kernel_thread = init_threading(stack_top, stack_bottom);
 	task_t* kernel_task = init_tasking(kernel_thread);
 	init_scheduler(kernel_task);
-
-	// init keyboard
-	init_keyboard_driver();
-
-	kprintf("kernel mode completed\n");
 
 	// test threading
 	//exec_thread(&fake_thread, "thread1");
@@ -117,7 +116,6 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 
 	// test forking
 	exec_elf("init");
-	//exec_elf("init");
 
 	for (;;)
 		monitor_put(keyboard_getchar());

@@ -11,7 +11,7 @@ page_directory_t* current_directory;
 
 // note that without identity mapping this variable won't be
 // valid anymore after enabling paging
-static page_directory_t kernel_directory;
+page_directory_t kernel_directory;
 // NOTE: kernel directory is mounted at the same place in every directory
 
 void page_fault(registers_t *regs);
@@ -66,6 +66,24 @@ void init_vmm() {
 	// TODO: prepare tage tables for the rest of kernel address space to avoid
 	// faults on switching to kernel in long ago copied directories
 
+	for (uint32_t i = PGDIR_IDX_FROM_ADDR(KERNEL_ADDRESS_SPACE);
+			i < PGDIR_IDX_FROM_ADDR(MOUNT_TABS_START); i++) {
+		if (!dir_ptr[i]) {
+			uint32_t* tab_ptr = (uint32_t*) pmm_alloc_page();
+			memset(tab_ptr, 0, PAGE_SIZE);
+			dir_ptr[i] = (uint32_t) tab_ptr | PAGE_PRESENT | PAGE_WRITE;
+		}
+	}
+
+	for (uint32_t i = PGDIR_IDX_FROM_ADDR(KERNEL_ADDRESS_SPACE);
+			i < PGDIR_IDX_FROM_ADDR(MOUNT_TABS_START); i++) {
+		if (!dir_ptr[i]) {
+			uint32_t* tab_ptr = (uint32_t*) pmm_alloc_page();
+			memset(tab_ptr, 0, PAGE_SIZE);
+			dir_ptr[i] = (uint32_t) tab_ptr | PAGE_PRESENT | PAGE_WRITE;
+		}
+	}
+
 	// TODO: consider if this kernel mapping is necessary
 
 	// set the current directory
@@ -97,8 +115,6 @@ void init_vmm() {
 }
 
 void switch_page_directory(page_directory_t* dir) {
-	if (current_directory != dir)
-		kprintf("switch dir: 0x%x\n", dir->physical);
 	current_directory = dir;
 	asm volatile("mov %0, %%cr3" : : "r" (dir->physical));
 }
@@ -106,11 +122,6 @@ void switch_page_directory(page_directory_t* dir) {
 void map(uint32_t va, uint32_t pa, uint32_t flags) {
 	uint32_t dir_entry = PGDIR_IDX_FROM_ADDR(va);
 	uint32_t page_num = PG_NUM_FROM_ADDR(va);
-
-	// NOTE: if we're mapping something in kernel from out of kernel
-	// we need to be careful not to fuck up
-	if (va >= KERNEL_ADDRESS_SPACE && current_directory != &kernel_directory)
-		kprintf("WARNING: kernel outdated\n");
 
 	// find appropriate pagetable for va
 	if (current_directory->directory[dir_entry] == 0) {
@@ -127,6 +138,13 @@ void map(uint32_t va, uint32_t pa, uint32_t flags) {
 	// page table exists, now update flags and pa
 	current_directory->pages[page_num] = (pa & PAGE_ADDR_MASK) | PAGE_PRESENT
 			| flags;
+
+	// NOTE: if we're mapping something in kernel from out of kernel
+	// we need to be careful not to fuck up
+	if (KERNEL_ADDRESS_SPACE <= va
+			&& current_directory->pages[page_num]
+					!= kernel_directory.pages[page_num])
+		kprintf("WARNING: kernel outdated\n");
 }
 
 void unmap(uint32_t va) {
