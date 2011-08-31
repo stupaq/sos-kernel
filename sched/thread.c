@@ -16,7 +16,7 @@ thread_t* init_threading(uint32_t kstack_top, uint32_t kstack_bottom) {
 }
 
 uint32_t* allocate_stack(uint32_t size) {
-	// offset of size * sizof(uint8_t) / sizeof(uint32_t)
+	// offset of size * sizeof(uint8_t) / sizeof(uint32_t)
 	return (uint32_t*) kmalloc(size) + size / 4;
 }
 

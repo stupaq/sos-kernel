@@ -123,6 +123,10 @@ char keyboard_getchar() {
 		return '\0';
 }
 
+char keyboard_buffer_empty() {
+	return keyboard_buffer_start == keyboard_buffer_end;
+}
+
 void switch_layout(keymap_t *layout) {
 	current_layout = layout;
 }

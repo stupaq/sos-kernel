@@ -26,4 +26,9 @@ void destroy_task(task_t* task);
 
 void task_add_thread(task_t* task, thread_t* thread);
 
+// ASM functions
+void cpu_idle();
+
+uint32_t read_eip();
+
 #endif // TASK_H

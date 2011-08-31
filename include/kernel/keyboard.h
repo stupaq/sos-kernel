@@ -45,4 +45,6 @@ void switch_layout(keymap_t *layout);
 // Returns '\0' if no character is available.
 char keyboard_getchar();
 
+char keyboard_buffer_empty();
+
 #endif

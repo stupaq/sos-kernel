@@ -12,28 +12,10 @@
 #include <fs/fs.h>
 #include <common.h>
 #include <monitor.h>
+#include <debug.h>
 
 extern uint32_t code, end; // defined by linker
 extern Elf32_Sym_Map kernel_elf; // for print stack trace;
-
-extern void cpu_idle();
-
-// threading testing shit
-#include <lock.h>
-spinlock_t lock = SPINLOCK_UNLOCKED;
-int fake_thread(void* arg) {
-	for (;;) {
-		spinlock_lock(&lock);
-		kprintf(">>> %s\n", arg);
-		for (int i = 0; i < 1000000; i++)
-			;
-		kprintf("%s >>>\n", arg);
-		spinlock_unlock(&lock);
-		for (int i = 0; i < 1000000; i++)
-			;
-	}
-	return 666;
-}
 
 int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 		uint32_t stack_bottom) {
@@ -71,11 +53,7 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 	// now we can use both kheap and pheap
 	init_kheap();
 
-	// debug
-	kprintf("kernel between 0x%.8x 0x%.8x mboot 0x%.8x\n", &code, &end,
-			mboot_ptr);
-	kprintf("kernel stack top 0x%.8x bottom 0x%.8x\n", stack_top,
-			stack_bottom);
+	debug_print_kernel_info();
 
 	// stack tracing
 	kernel_elf = elf_sym_map_from_multiboot(elf_sec);
@@ -86,15 +64,8 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 		// set root filesystem
 		fs_root = init_initrd(initrd_mod->mod_start);
 
-		// debug
-		kprintf("initrd loaded at 0x%.8x to 0x%.8x with:\n",
-				*((uint32_t*) mboot_ptr->mods_addr), pmm_start);
-		dirent_t* node = 0;
-		for (int i = 0; (node = readdir(fs_root, i)) != 0; i++) {
-			fs_node_t* fsnode = finddir(fs_root, node->name);
-			kprintf("\t%.20s\t0x%x\t%d\n", node->name, fsnode->flags,
-					fsnode->length);
-		}
+		debug_print_initrd_info();
+		debug_print_root_content(fs_root);
 	}
 
 	// enable interrupts
@@ -103,7 +74,7 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 	// init keyboard
 	init_keyboard_driver();
 
-	kprintf("kernel ready\n");
+	debug_checkpoint("kernel ready");
 
 	// enable multitasking and multithreading
 	thread_t* kernel_thread = init_threading(stack_top, stack_bottom);
@@ -111,8 +82,7 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 	init_scheduler(kernel_task);
 
 	// test threading
-	//exec_thread(&fake_thread, "thread1");
-	//exec_thread(&fake_thread, "thread2");
+	//debug_run_threads(3);
 
 	// test forking
 	exec_elf("init");

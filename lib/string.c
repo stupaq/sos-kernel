@@ -16,7 +16,7 @@ void* memset(void* dest, int val, uint32_t len) {
 	return dest;
 }
 
-int8_t memcmp(const void* s1, const void* s2, uint32_t n) {
+int32_t memcmp(const void* s1, const void* s2, size_t n) {
 	const uint8_t* us1 = (const uint8_t*) s1;
 	const uint8_t* us2 = (const uint8_t*) s2;
 	while (n-- != 0) {

@@ -7,7 +7,7 @@
 
 void init_scheduler(task_t* initial_task);
 
-void sched_add_task(task_t* new_task);
+void schedule_add_task(task_t* new_task);
 
 void schedule();
 

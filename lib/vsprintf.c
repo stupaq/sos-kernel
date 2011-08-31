@@ -1,7 +1,7 @@
 /**
  * Wirzenius wrote this portably, Torvalds fucked it up, so does Mateusz ;)
  */
-#include <stdarg.h>
+#include <vsprintf.h>
 #include <string.h>
 
 /* we use this so that we can do without the ctype library */

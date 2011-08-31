@@ -1,7 +1,6 @@
 #include <kernel/idt.h>
 #include <common.h>
 
-// Lets us access our ASM functions from our C code.
 extern void idt_flush(uint32_t);
 
 // Internal function prototypes.

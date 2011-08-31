@@ -3,7 +3,7 @@
 
 #include <common.h>
 
-int32_t fork_userspace();
+int32_t fork();
 
 uint32_t exec_elf(const char* name);
 

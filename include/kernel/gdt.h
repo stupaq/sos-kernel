@@ -3,9 +3,6 @@
 
 #include <common.h>
 
-// Initialisation function.
-void init_gdt();
-
 typedef struct {
 	uint16_t limit_low; // The lower 16 bits of the limit.
 	uint16_t base_low; // The lower 16 bits of the base.
@@ -55,6 +52,9 @@ struct tss_entry_struct {
 }__attribute__((packed));
 
 typedef struct tss_entry_struct tss_entry_t;
+
+// Initialisation function
+void init_gdt();
 
 #endif
 

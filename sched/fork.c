@@ -6,14 +6,13 @@
 #include <fs/fs.h>
 #include <kernel/elf.h>
 
-extern task_t* kernel_task;
 extern task_t* current_task;
 extern thread_t* current_thread;
 extern uint32_t next_tid;
 
 extern page_directory_t* current_directory;
 
-int32_t fork_userspace() {
+int32_t fork() {
 	panic("need to copy stack");
 
 	// TODO: change to kernel locking
@@ -36,7 +35,7 @@ int32_t fork_userspace() {
 	// new stack (no in case when forking from kernel)
 
 	// add to run queue
-	sched_add_task(new_task);
+	schedule_add_task(new_task);
 
 	// after this will be entry point
 	save_thread_state(new_thread);
@@ -60,6 +59,7 @@ int32_t fork_userspace() {
 
 uint32_t exec_elf(const char* name) {
 	fs_node_t* file = finddir(fs_root, name);
+	open(file, 1, 0);
 
 	// disable interrupts
 	asm volatile("cli");
@@ -74,9 +74,6 @@ uint32_t exec_elf(const char* name) {
 	// load elf and get entry point
 	uint32_t entry = load_elf_binary(file);
 
-	// switch back to parents directory
-	switch_page_directory(old_dir);
-
 	// setup stack
 	uint32_t stack = (uint32_t) allocate_stack(THREAD_STACK_SIZE);
 
@@ -84,10 +81,13 @@ uint32_t exec_elf(const char* name) {
 	thread_t* new_thread = create_thread((int(*)(void*)) entry, 0,
 			(uint32_t*) stack, THREAD_STACK_SIZE);
 	task_t* new_task = create_task(new_thread, new_dir);
-	sched_add_task(new_task);
+	schedule_add_task(new_task);
 
-	// cleanup
-	kfree(file);
+	// switch back to parents directory
+	switch_page_directory(old_dir);
+
+	// close executable image
+	close(file);
 
 	// reenable interrupts
 	asm volatile("sti");
