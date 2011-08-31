@@ -2,7 +2,7 @@
 #include <sched/thread.h>
 
 extern task_t* current_task;
-extern thread_t* current_thread;
+extern thread_t* kernel_thread;
 
 list_t* tasks = 0;
 list_t* threads = 0;
@@ -25,17 +25,13 @@ void schedule_add_task(task_t* new_task) {
 	list_push_back(tasks, (uint32_t*) new_task);
 }
 
-//debug
-static uint32_t tick = 0;
-
 // O(1) amortized, very unfair however...
 void schedule() {
 	if (!tasks)
 		return;
 
-	//debug
-	if (tick++ % 100)
-		return;
+	// switch to kernel thread
+	switch_thread(kernel_thread);
 
 	task_t* new_task = 0;
 	thread_t* new_thread = 0;
@@ -93,9 +89,6 @@ void schedule() {
 		}
 	} while (!new_thread);
 
-	if (current_thread == new_thread)
-		return;
-	// switch_thread changes current_thread too, also it does ret,
-	// so everything after in this function will be ommited
+	// switch_thread changes current_thread too
 	switch_thread(new_thread);
 }

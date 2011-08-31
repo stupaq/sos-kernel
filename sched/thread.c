@@ -4,10 +4,12 @@
 thread_t* current_thread = 0;
 uint32_t next_tid = 0;
 
+thread_t* kernel_thread = 0;
+
 void thread_exit();
 
 thread_t* init_threading(uint32_t kstack_top, uint32_t kstack_bottom) {
-	current_thread = kmalloc_zero(sizeof(thread_t));
+	current_thread = kernel_thread = kmalloc_zero(sizeof(thread_t));
 	current_thread->tid = next_tid++;
 	current_thread->state = THREAD_RUNNING;
 	current_thread->stack_size = kstack_top - kstack_bottom + 4; // a word

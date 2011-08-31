@@ -47,3 +47,21 @@ save_thread_state:
 
 	ret
 .end:
+
+global load_thread_state:function load_thread_state.end-load_thread_state
+load_thread_state:
+	mov eax, [esp+4]
+
+	mov esp, [eax+0]
+	mov ebp, [eax+4]
+	mov ebx, [eax+8]
+	mov esi, [eax+12]
+	mov edi, [eax+16]
+
+	mov eax, [eax+20]
+	push eax
+	popf
+
+	ret
+.end:
+

@@ -45,7 +45,7 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 	init_gdt(stack_top);
 
 	// and setup pit
-	init_timer(1);
+	init_timer(25);
 
 	// till now we cannot allocate any page from paging stack (or do any malloc)
 	pmm_collect_pages(mboot_ptr);
@@ -82,7 +82,7 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 	init_scheduler(kernel_task);
 
 	// test threading
-	//debug_run_threads(3);
+	//debug_run_threads(1);
 
 	// test forking
 	exec_elf("init");

@@ -34,4 +34,6 @@ void switch_thread(thread_t* next);
 
 void save_thread_state(thread_t* thread);
 
+void load_thread_state(thread_t* thread);
+
 #endif
