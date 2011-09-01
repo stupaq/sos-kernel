@@ -94,7 +94,10 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 
 int init() {
 	debug_checkpoint("entering init thread");
-	for (;;)
-		;
+	/*// debug
+	debug_register_handler(6);
+	uint32_t pid = fork();
+	kprintf("%d\n", pid);
+	//*/
 	return 0;
 }

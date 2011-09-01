@@ -276,7 +276,10 @@ page_directory_t* clone_directory(page_directory_t* src_dir) {
 	for (uint32_t i = 0; i < 1024; i++) {
 		if (src.directory[i] == 0)
 			continue;
-		if (src.directory[i] == kernel_directory.directory[i]) {
+		if (src.directory[i] == kernel_directory.directory[i]
+				&& i >= PGDIR_IDX_FROM_ADDR(KERNEL_ADDRESS_SPACE)) {
+			// NOTE: this will let us fork from kernel thread,
+			// but also implies higher half kernel
 			dest.directory[i] = src.directory[i];
 		} else {
 			dest.directory[i] = pmm_alloc_page() | PAGE_PRESENT | PAGE_WRITE

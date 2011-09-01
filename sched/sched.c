@@ -50,9 +50,12 @@ void schedule() {
 			threads = new_task->threads;
 			// done already but just in case
 			list_rewind(threads);
-			// NOTE: were now in old task but we have choosen the new task
+			// NOTE: we're in old task but we've choosen the new one (or not)
+			// now decide if we have to switch address space
+			if (new_task == current_task)
+				new_task = 0;
 		}
-		// NOTE: new_task MAY BE _NULL_
+		// NOTE: new_task is NULL iff we didn't choose other task
 
 		new_thread = (thread_t*) list_current(threads);
 		// remove thread if terminated
@@ -73,12 +76,27 @@ void schedule() {
 	} while (!new_thread);
 	// NOTE: new_task MAY BE _NULL_
 
-	// now decide if we have to switch address space
-	if (new_task && new_task != current_task) {
-		// switch_context changes current_task and current_thread too
+	if (current_thread != new_thread) {
+		// switch_context changes current_task and current_thread too,
+		// if the latter is not NULL
 		switch_context(new_thread, new_task);
-	} else if (new_thread != current_thread) {
-		// switch_thread changes current_thread too
-		switch_context(new_thread, 0);
 	}
+}
+
+void preempt() {
+	schedule();
+}
+
+void sleep() {
+	current_thread->state = THREAD_WAITING;
+	preempt();
+}
+
+void wakeup(thread_t* thread) {
+	thread->state = THREAD_RUNNING;
+}
+
+void kill(thread_t* thread) {
+	if (thread != current_thread)
+		thread->state = THREAD_DYING;
 }

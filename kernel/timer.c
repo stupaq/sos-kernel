@@ -6,6 +6,8 @@
 uint32_t tick = 0;
 uint32_t frequency = 0;
 
+extern void schedule();
+
 static void timer_callback(registers_t *regs) {
 	tick++;
 	schedule();

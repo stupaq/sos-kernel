@@ -34,3 +34,27 @@ void debug_run_threads(uint32_t num) {
 	for (uint32_t i = 1; i <= num; i++)
 		exec_thread((int(*)(void*)) &test_thread, (uint32_t*) i);
 }
+
+#include <kernel/idt.h>
+#include <mm/vmm.h>
+#include <sched/task.h>
+#include <sched/thread.h>
+
+extern page_directory_t* current_directory;
+extern page_directory_t kernel_directory;
+extern task_t* current_task;
+extern thread_t* current_thread;
+
+static void debug_universal_handler(registers_t* regs) {
+	kprintf("Scheduler: pid: %d tid: %d\n", current_task->pid,
+			current_thread->tid);
+	kprintf("Current directory: 0x%.8x %s\n", current_directory->physical,
+			(current_directory == &kernel_directory) ? "kernel" : "");
+	kprintf("Registers: eip: 0x%x\n", regs->eip);
+	kprintf("Error code: %x\n", regs->err_code);
+	panic("DEBUG universal handler");
+}
+
+void debug_register_handler(uint8_t n) {
+	register_interrupt_handler(n, debug_universal_handler);
+}

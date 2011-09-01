@@ -21,4 +21,6 @@ void debug_print_root_content(fs_node_t* fs_root);
 
 void debug_run_threads(uint32_t num);
 
+void debug_register_handler(uint8_t n);
+
 #endif // DEBUG_H
