@@ -174,6 +174,29 @@ uint8_t get_mapping(uint32_t va, uint32_t* pa) {
 	return 0;
 }
 
+uint32_t find_free_range(uint32_t va_start, uint32_t va_end, uint32_t size,
+		uint8_t size_aligned) {
+	va_start = PAGE_ROUND_DOWN(va_start);
+	va_end = PAGE_ROUND_UP(va_end);
+	size = PAGE_ROUND_UP(size);
+	uint32_t step = (size_aligned) ? size : PAGE_SIZE;
+	for (; va_start < va_end;) {
+		uint32_t va;
+		for (va = va_start; va < va_start + size; va += PAGE_SIZE)
+			if (get_mapping(va, 0))
+				break;
+		if (va == va_start + size) {
+			// success
+			return va_start;
+		} else {
+			while (va_start <= va)
+				va_start += step;
+		}
+	}
+	// failed
+	return va_end;
+}
+
 uint32_t allocate_range(uint32_t va_start, uint32_t va_end, uint32_t flags) {
 	va_start = PAGE_ROUND_DOWN(va_start);
 	va_end = PAGE_ROUND_UP(va_end);

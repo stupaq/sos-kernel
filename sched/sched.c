@@ -6,13 +6,7 @@ extern thread_t* current_thread;
 list_t* tasks = 0;
 list_t* threads = 0;
 
-// this stack exists in kernel address space so is accessible
-// in all page directories
-static uint32_t scheduler_stack = 0;
-
 void init_scheduler(task_t* initial_task) {
-	// allocate stack for scheduler operations
-	scheduler_stack = (uint32_t) allocate_stack(THREAD_STACK_SIZE);
 	// prepare initial task queue
 	tasks = list_new();
 	list_push_back(tasks, (uint32_t*) initial_task);

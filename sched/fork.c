@@ -75,8 +75,7 @@ uint32_t exec_elf(const char* name) {
 	uint32_t entry = load_elf_binary(file);
 
 	// setup stack
-	uint32_t stack = USER_STACKS + THREAD_STACK_SIZE;
-	allocate_range(stack - THREAD_STACK_SIZE, stack, PAGE_WRITE | PAGE_USER);
+	uint32_t stack = (uint32_t) allocate_stack(THREAD_STACK_SIZE);
 
 	// create scheduling structures
 	thread_t* new_thread = create_thread((int(*)(void*)) entry, 0,

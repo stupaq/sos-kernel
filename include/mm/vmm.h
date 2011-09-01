@@ -56,6 +56,10 @@ void unmap(uint32_t va);
 // If "*pa" is non-NULL, the physical address of the mapping is placed in *pa.
 uint8_t get_mapping(uint32_t va, uint32_t* pa);
 
+// finds free range
+uint32_t find_free_range(uint32_t va_start, uint32_t va_end, uint32_t size,
+		uint8_t size_aligned);
+
 // guarantees that whole range from va_start to va_end excluding is mapped
 uint32_t allocate_range(uint32_t va_start, uint32_t va_end, uint32_t flags);
 

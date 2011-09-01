@@ -1,4 +1,5 @@
 #include <sched/thread.h>
+#include <mm/vmm.h>
 
 // sched.c and thread.s relie on that
 thread_t* current_thread = 0;
@@ -18,8 +19,13 @@ thread_t* init_threading(uint32_t kstack_top, uint32_t kstack_bottom) {
 }
 
 uint32_t* allocate_stack(uint32_t size) {
-	// offset of size * sizeof(uint8_t) / sizeof(uint32_t)
-	return (uint32_t*) kmalloc(size) + size / 4;
+	uint32_t va = find_free_range(USER_STACKS_START, USER_STACKS_END, size, 1);
+
+	if (va == USER_STACKS_END)
+		panic("No place for stacks.");
+
+	allocate_range(va, va + size, PAGE_USER | PAGE_WRITE);
+	return (uint32_t*) (va + size);
 }
 
 thread_t* create_thread(int(*fn)(void*), void* arg, uint32_t* stack,
