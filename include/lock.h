@@ -14,20 +14,4 @@ void spinlock_unlock(spinlock_t *lock);
 
 uint8_t spinlock_trylock(spinlock_t *lock);
 
-/*
-typedef struct semaphore {
-	uint32_t counter;
-	spinlock_t lock;
-	thread_t* queue;
-} semaphore_t;
-
-void semaphore_init(semaphore_t *sem, uint32_t value);
-
-void semaphore_destroy(semaphore_t *sem);
-
-void semaphore_p(semaphore_t *sem);
-
-void semaphore_v(semaphore_t *sem);
-*/
-
 #endif

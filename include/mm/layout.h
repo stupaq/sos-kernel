@@ -16,6 +16,8 @@
 #define USER_DIR_VIRTUAL		0xEFBFF000
 #define USER_TABLES_VIRTUAL		0xEFC00000
 
+#define USER_STACKS				0xE0000000
+
 // from this point (KERNEL_ADDRESS_SPACE) starts kernel part of memory
 #define KERNEL_ADDRESS_SPACE	0xF0000000
 

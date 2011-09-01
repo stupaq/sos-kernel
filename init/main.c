@@ -82,7 +82,7 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 	init_scheduler(kernel_task);
 
 	// test threading
-	//debug_run_threads(1);
+	//debug_run_threads(3);
 
 	// test forking
 	exec_elf("init");

@@ -1,8 +1,7 @@
 #include <sched/sched.h>
-#include <sched/thread.h>
 
 extern task_t* current_task;
-extern thread_t* kernel_thread;
+extern thread_t* current_thread;
 
 list_t* tasks = 0;
 list_t* threads = 0;
@@ -25,13 +24,12 @@ void schedule_add_task(task_t* new_task) {
 	list_push_back(tasks, (uint32_t*) new_task);
 }
 
+extern void switch_context(thread_t* thread, task_t* task);
+
 // O(1) amortized, very unfair however...
 void schedule() {
 	if (!tasks)
 		return;
-
-	// switch to kernel thread
-	switch_thread(kernel_thread);
 
 	task_t* new_task = 0;
 	thread_t* new_thread = 0;
@@ -60,13 +58,7 @@ void schedule() {
 			threads = new_task->threads;
 			// done already but just in case
 			list_rewind(threads);
-			// now decide if we have to switch address space
-			if (new_task != current_task) {
-				// change task
-				current_task = new_task;
-				// change address space (page directory)
-				switch_page_directory(new_task->page_directory);
-			}
+			// NOTE: were now in old task but we have choosen the new task
 		}
 
 		new_thread = (thread_t*) list_current(threads);
@@ -89,6 +81,12 @@ void schedule() {
 		}
 	} while (!new_thread);
 
-	// switch_thread changes current_thread too
-	switch_thread(new_thread);
+	// now decide if we have to switch address space
+	if (new_task != current_task) {
+		// switch_context changes current_task and current_thread too
+		switch_context(new_thread, new_task);
+	} else if (new_thread != current_thread) {
+		// switch_thread changes current_thread too
+		switch_context(new_thread, 0);
+	}
 }
