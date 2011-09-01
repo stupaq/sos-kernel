@@ -40,8 +40,6 @@ void schedule() {
 				new_task = (task_t*) list_current(tasks);
 				// if has no threads - remove
 				if (list_is_empty(new_task->threads)) {
-					// debug
-					kprintf("delete pid: %d\n", new_task->pid);
 					list_remove(tasks);
 					destroy_task(new_task);
 					new_task = 0;
@@ -54,13 +52,12 @@ void schedule() {
 			list_rewind(threads);
 			// NOTE: were now in old task but we have choosen the new task
 		}
+		// NOTE: new_task MAY BE _NULL_
 
 		new_thread = (thread_t*) list_current(threads);
 		// remove thread if terminated
 		switch (new_thread->state) {
 		case THREAD_DYING:
-			// debug
-			kprintf("delete tid: %d\n", new_thread->tid);
 			list_remove(threads);
 			destroy_thread(new_thread);
 			new_thread = 0;
@@ -74,9 +71,10 @@ void schedule() {
 			break;
 		}
 	} while (!new_thread);
+	// NOTE: new_task MAY BE _NULL_
 
 	// now decide if we have to switch address space
-	if (new_task != current_task) {
+	if (new_task && new_task != current_task) {
 		// switch_context changes current_task and current_thread too
 		switch_context(new_thread, new_task);
 	} else if (new_thread != current_thread) {

@@ -17,6 +17,8 @@
 extern uint32_t code, end; // defined by linker
 extern Elf32_Sym_Map kernel_elf; // for print stack trace;
 
+int init();
+
 int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 		uint32_t stack_bottom) {
 	// get everything what we may need from multiboot
@@ -81,15 +83,18 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 	task_t* kernel_task = init_tasking(kernel_thread);
 	init_scheduler(kernel_task);
 
-	// test threading
-	//debug_run_threads(3);
-
-	// test forking
-	exec_elf("init");
+	exec_thread((int(*)(void*)) init, 0);
 
 	for (;;)
 		monitor_put(keyboard_getchar());
 
 	cpu_idle();
 	return 0xBEEFCAFE;
+}
+
+int init() {
+	debug_checkpoint("entering init thread");
+	for (;;)
+		;
+	return 0;
 }

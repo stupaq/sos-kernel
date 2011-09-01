@@ -8,12 +8,16 @@
 
 extern task_t* current_task;
 extern thread_t* current_thread;
+extern thread_t* kernel_thread;
+
 extern uint32_t next_tid;
 
 extern page_directory_t* current_directory;
 
 int32_t fork() {
-	panic("need to copy stack");
+
+	if (kernel_thread == current_thread)
+		panic("SCHED: no forking from kernel thread.");
 
 	// TODO: change to kernel locking
 	asm volatile("cli");
@@ -44,7 +48,6 @@ int32_t fork() {
 	// decide if we're in child or parent
 	if (current_thread == new_thread) {
 		// we're in child
-
 		return 0;
 	} else {
 		// we're in parent
