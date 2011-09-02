@@ -104,11 +104,10 @@ string.o: lib/string.c include/string.h include/common.h \
  include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
  include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \
  include/kprintf.h
-vsprintf.o: lib/vsprintf.c \
- /usr/lib/gcc/i686-pc-linux-gnu/4.6.1/include/stdarg.h include/string.h \
- include/common.h include/kernel/panic.h include/kernel/keyboard.h \
- include/mm/kheap.h include/mm/pmm.h include/boot/multiboot.h \
- include/mm/layout.h include/kprintf.h
+vsprintf.o: lib/vsprintf.c include/vsprintf.h include/stdarg.h \
+ include/string.h include/common.h include/kernel/panic.h \
+ include/kernel/keyboard.h include/mm/kheap.h include/mm/pmm.h \
+ include/boot/multiboot.h include/mm/layout.h include/kprintf.h
 common.o: lib/common.c include/common.h include/kernel/panic.h \
  include/kernel/keyboard.h include/mm/kheap.h include/mm/pmm.h \
  include/boot/multiboot.h include/mm/layout.h include/kprintf.h \
@@ -118,10 +117,10 @@ list.o: lib/list.c include/list.h include/common.h include/kernel/panic.h \
  include/boot/multiboot.h include/mm/layout.h include/kprintf.h \
  include/string.h
 kprintf.o: lib/kprintf.c include/kprintf.h include/vsprintf.h \
- /usr/lib/gcc/i686-pc-linux-gnu/4.6.1/include/stdarg.h include/monitor.h \
- include/common.h include/kernel/panic.h include/kernel/keyboard.h \
- include/mm/kheap.h include/mm/pmm.h include/boot/multiboot.h \
- include/mm/layout.h include/string.h
+ include/stdarg.h include/monitor.h include/common.h \
+ include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
+ include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \
+ include/string.h
 monitor.o: lib/monitor.c include/monitor.h include/common.h \
  include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
  include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \
@@ -133,7 +132,13 @@ main.o: init/main.c include/boot/multiboot.h include/common.h \
  include/kernel/elf.h include/kernel/elf-fn.h include/fs/fs.h \
  include/sched/sched.h include/sched/thread.h include/sched/task.h \
  include/list.h include/mm/vmm.h include/sched/fork.h include/fs/initrd.h \
- include/monitor.h include/lock.h
+ include/monitor.h include/debug.h
+debug.o: init/debug.c include/debug.h include/common.h \
+ include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
+ include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \
+ include/kprintf.h include/string.h include/fs/fs.h include/lock.h \
+ include/sched/fork.h include/kernel/idt.h include/mm/vmm.h \
+ include/sched/task.h include/list.h include/sched/thread.h
 sched.o: sched/sched.c include/sched/sched.h include/common.h \
  include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
  include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \
@@ -142,7 +147,7 @@ sched.o: sched/sched.c include/sched/sched.h include/common.h \
 thread.o: sched/thread.c include/sched/thread.h include/common.h \
  include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
  include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \
- include/kprintf.h include/string.h
+ include/kprintf.h include/string.h include/mm/vmm.h
 fork.o: sched/fork.c include/sched/fork.h include/common.h \
  include/kernel/panic.h include/kernel/keyboard.h include/mm/kheap.h \
  include/mm/pmm.h include/boot/multiboot.h include/mm/layout.h \

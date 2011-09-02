@@ -29,7 +29,7 @@
 #define MOUNT_TABS_END			0xFF000000
 
 // no effect as currently kernel resides in low mem
-#define KERNEL_HIGHMEM			0xFF000000
+#define KERNEL_HIGHMEM			0xFF000000	// to update in kernel.ld and boot.s
 #define KERNEL_HIGHMEM_LIMIT	0xFF7FB000
 
 #define MOUNT_DIR_START			0xFF7FB000

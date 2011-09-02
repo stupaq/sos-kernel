@@ -34,10 +34,10 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 	uint32_t pmm_start = (initrd_mod) ? initrd_mod->mod_end : (uint32_t) &end;
 
 	// TODO: remember to set proper video mem in layout (in case of highmem)
-	init_monitor();
+	//init_monitor();
 
 	// setup interrupts (before first register_handler())
-	init_idt();
+	//init_idt();
 
 	// enable paging (which registers interrupt handler)
 	init_pmm(pmm_start);
@@ -45,6 +45,10 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 
 	// after enabling paging set proper gdt
 	init_gdt(stack_top);
+
+	// TODO: debug
+	for (;;)
+		;
 
 	// and setup pit
 	init_timer(25);
@@ -95,9 +99,9 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 int init() {
 	debug_checkpoint("entering init thread");
 	/*// debug
-	debug_register_handler(6);
-	uint32_t pid = fork();
-	kprintf("%d\n", pid);
-	//*/
+	 debug_register_handler(6);
+	 uint32_t pid = fork();
+	 kprintf("%d\n", pid);
+	 //*/
 	return 0;
 }
