@@ -3,6 +3,7 @@
 #include <kernel/idt.h>
 #include <kernel/timer.h>
 #include <kernel/elf.h>
+#include <kernel/kbd.h>
 #include <sched/sched.h>
 #include <sched/thread.h>
 #include <sched/fork.h>
@@ -74,7 +75,7 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 	asm volatile("sti");
 
 	// init keyboard
-	init_keyboard_driver();
+	kbd_init_driver();
 
 	debug_checkpoint("kernel ready");
 
@@ -83,10 +84,14 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 	task_t* kernel_task = init_tasking(kernel_thread);
 	init_scheduler(kernel_task);
 
+	exec_elf("init");
+	debug_checkpoint("spawned process init");
+
 	exec_thread((int(*)(void*)) init, 0);
+	debug_checkpoint("spawned thread init");
 
 	for (;;)
-		monitor_put(keyboard_getchar());
+		monitor_put(kbd_getchar());
 
 	cpu_idle();
 	return 0xBEEFCAFE;
@@ -98,6 +103,6 @@ int init() {
 	debug_register_handler(6);
 	uint32_t pid = fork();
 	kprintf("%d\n", pid);
-	//*/
+	*/
 	return 0;
 }

@@ -19,7 +19,6 @@ uint16_t inw(uint16_t port);
 #ifndef COMMON_H_NO_EXTRA_LIBS
 
 #include <kernel/panic.h>
-#include <kernel/keyboard.h>
 #include <mm/kheap.h>
 #include <kprintf.h>
 #include <string.h>

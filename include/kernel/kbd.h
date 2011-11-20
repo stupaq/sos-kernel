@@ -1,5 +1,5 @@
-#ifndef KEYBOARD_H
-#define KEYBOARD_H
+#ifndef KBD_H
+#define KBD_H
 
 #include <common.h>
 
@@ -38,13 +38,12 @@ typedef struct keymap {
 	key_status_t controls;
 } keymap_t;
 
-void init_keyboard_driver();
-void switch_layout(keymap_t *layout);
+void kbd_init_driver();
+void kbd_switch_layout(keymap_t *layout);
 
-// Returns a character from the keyboard; does not block.
-// Returns '\0' if no character is available.
-char keyboard_getchar();
+// Returns a character from the keyboard, '\0' if no character is available.
+char kbd_getchar();
 
-char keyboard_buffer_empty();
+char kbd_buffer_empty();
 
-#endif
+#endif // KBD_H

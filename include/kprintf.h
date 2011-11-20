@@ -1,5 +1,5 @@
-#ifndef PRINTK_H
-#define PRINTK_H
+#ifndef KPRINTF_H
+#define KPRINTF_H
 
 void kprintf(const char *fmt, ...);
 

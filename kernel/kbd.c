@@ -1,9 +1,9 @@
-#include <kernel/keyboard.h>
+#include <kernel/kbd.h>
 #include <kernel/idt.h>
 
 // keyboard layouts:
 
-keymap_t us = {
+keymap_t kbd_keymap_us = {
 //normal keys
 		{
 		/* first row - indices 0 to 14 */
@@ -95,43 +95,43 @@ keymap_t us = {
 		//Set the initial status of all control keys to "not active"
 		0 };
 
-// functionality
-keymap_t *current_layout;
+
+keymap_t *kbd_current_layout;
 
 // indices into the circular buffer
-uint32_t keyboard_buffer_start, keyboard_buffer_end;
+uint32_t kbd_buffer_start, kbd_buffer_end;
 // circular buffer for content captured from  keyboard
 char keyboard_buffer[256];
 
-void keyboard_handler(registers_t *regs);
+void kbd_handler(registers_t *regs);
 
-void init_keyboard_driver() {
-	register_interrupt_handler(IRQ1, &keyboard_handler);
-	switch_layout(&us);
+void kbd_init_driver() {
+	register_interrupt_handler(IRQ1, &kbd_handler);
+	kbd_switch_layout(&kbd_keymap_us);
 
-	keyboard_buffer_start = 0;
-	keyboard_buffer_end = 0;
+	kbd_buffer_start = 0;
+	kbd_buffer_end = 0;
 }
 
-char keyboard_getchar() {
-	if (keyboard_buffer_start != keyboard_buffer_end) {
-		char c = keyboard_buffer[keyboard_buffer_start++];
+char kbd_getchar() {
+	if (kbd_buffer_start != kbd_buffer_end) {
+		char c = keyboard_buffer[kbd_buffer_start++];
 		// wrap to the start of the buffer if we went off the end
-		keyboard_buffer_start &= 255;
+		kbd_buffer_start &= 255;
 		return c;
 	} else
 		return '\0';
 }
 
-char keyboard_buffer_empty() {
-	return keyboard_buffer_start == keyboard_buffer_end;
+char kbd_buffer_empty() {
+	return kbd_buffer_start == kbd_buffer_end;
 }
 
-void switch_layout(keymap_t *layout) {
-	current_layout = layout;
+void kbd_switch_layout(keymap_t *layout) {
+	kbd_current_layout = layout;
 }
 
-void keyboard_handler(registers_t *regs) {
+void kbd_handler(registers_t *regs) {
 	uint8_t scancode = inb(0x60);
 
 	// Has the key been released? Check bit no. 7
@@ -140,9 +140,9 @@ void keyboard_handler(registers_t *regs) {
 		// the only ones doing anything on release
 		uint32_t i;
 		for (i = 0; i < 5; i++) {
-			if (current_layout->control_map[i] == (scancode & ~RELEASED_MASK)) {
+			if (kbd_current_layout->control_map[i] == (scancode & ~RELEASED_MASK)) {
 				// releasing the key always disables its function
-				current_layout->controls &= ~(1 << i);
+				kbd_current_layout->controls &= ~(1 << i);
 				return;
 			}
 		}
@@ -151,28 +151,28 @@ void keyboard_handler(registers_t *regs) {
 		// invert its bit in the status map
 		uint32_t i;
 		for (i = 0; i < 8; i++) {
-			if (current_layout->control_map[i] == scancode) {
+			if (kbd_current_layout->control_map[i] == scancode) {
 				//if bit is set, delete it
-				if (current_layout->controls & 1 << i)
-					current_layout->controls &= ~(1 << i);
+				if (kbd_current_layout->controls & 1 << i)
+					kbd_current_layout->controls &= ~(1 << i);
 				// if not, set it
 				else
-					current_layout->controls |= 1 << i;
+					kbd_current_layout->controls |= 1 << i;
 				return;
 			}
 		}
 
 		// if it was a non-control key, just print it upper or lowercase version
 		// depending on the status of the control keys
-		uint8_t *scancodes = current_layout->scancodes;
-		if ((current_layout->controls & (LSHIFT | RSHIFT | CAPSLOCK))
-				&& !(current_layout->controls & CONTROL))
-			scancodes = current_layout->shift_scancodes;
+		uint8_t *scancodes = kbd_current_layout->scancodes;
+		if ((kbd_current_layout->controls & (LSHIFT | RSHIFT | CAPSLOCK))
+				&& !(kbd_current_layout->controls & CONTROL))
+			scancodes = kbd_current_layout->shift_scancodes;
 
 		// avoid buffer overruns if possible
-		if (keyboard_buffer_end != keyboard_buffer_start - 1) {
-			keyboard_buffer[keyboard_buffer_end++] = scancodes[scancode];
-			keyboard_buffer_end &= 255;
+		if (kbd_buffer_end != kbd_buffer_start - 1) {
+			keyboard_buffer[kbd_buffer_end++] = scancodes[scancode];
+			kbd_buffer_end &= 255;
 		}
 	}
 }
