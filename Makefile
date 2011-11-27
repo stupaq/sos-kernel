@@ -8,16 +8,14 @@ AS=nasm
 LD=ld.bfd
 
 CFLAGS=-nostdlib -fno-builtin -m32 -Wall -Wextra -std=gnu99 -pedantic
-LDFLAGS=-T kernel.ld
+LDFLAGS=-T kernel.ld -m elf_i386
 ASFLAGS=-felf
 
-all: $(COBJECTS) $(SOBJECTS) link tools user update
+all: $(COBJECTS) $(SOBJECTS) link
 
 clean:
-	@echo Removing object files
-	@-rm $(COBJECTS) $(SOBJECTS) kernel.bin 2>/dev/null
-	@(cd ../tools; make clean)
-	@(cd ../user; make clean)
+	@echo Cleaning
+	@rm -f $(COBJECTS) $(SOBJECTS) kernel.bin
 
 link:
 	@echo Linking
@@ -30,16 +28,6 @@ link:
 .c.o:
 	@echo Compiling $<
 	@$(CC) $(CFLAGS) -o $@ -c $<
-
-tools:
-	@(cd ../tools; make)
-
-user:
-	@(cd ../user; make)
-
-update:
-	@echo Updating image
-	@(cd ../; ./update_floppy.sh)
 
 dep:
 	@echo Computing dependencies

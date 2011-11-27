@@ -84,7 +84,9 @@ int kmain(multiboot_info_t* mboot_ptr, uint32_t stack_top,
 	task_t* kernel_task = init_tasking(kernel_thread);
 	init_scheduler(kernel_task);
 
-	exec_elf("init");
+	debug_checkpoint("sheduler working");
+
+	exec_elf("user/init");
 	debug_checkpoint("spawned process init");
 
 	exec_thread((int(*)(void*)) init, 0);
@@ -104,5 +106,6 @@ int init() {
 	uint32_t pid = fork();
 	kprintf("%d\n", pid);
 	*/
+	debug_checkpoint("leaving init thread");
 	return 0;
 }
