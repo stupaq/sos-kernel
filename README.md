@@ -11,3 +11,5 @@ Disclaimer
 ----------
 Use at your own risk. May break stuff if you deploy it to real machine.
 
+Copyright (c) 2011-2014 Mateusz Machalica
+
